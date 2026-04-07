@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#FDF8F2">
-<title>아이돌 연습생 트레이닝</title>
+<title>아이돌이 될거야</title>
 <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Nanum+Pen+Script&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#FDF8F2;--sf:#F8EFE4;--sf2:#F0E4D4;--tx:#5C4A3E;--tm:#8A7868;--th:#B8A898;--pink:#E8B4B8;--pink2:#D49498;--lav:#C8B5D9;--lav2:#A890C0;--rose:#D4A5A5;--rose2:#B8869A;--accent:#B8869A;--good:#88B8A8;--warn:#E8A878;--card:#FFFBF6;--paper:#FAF4E8;--border:#E0D0BC;--border2:#D4C0A8;--tape:#E8D4B0;--shadow:2px 3px 8px rgba(180,140,120,.15);--shadow2:3px 4px 12px rgba(180,140,120,.2)}
@@ -419,6 +419,7 @@ if(!S.config)S.config={sets:3,reps:10,coreSets:2,coreReps:10,cardioDur:25};
 if(!S.customCardio)S.customCardio=[];
 if(!S.condition)S.condition={};
 if(S.targetWeight===undefined)S.targetWeight=null;
+if(S.debutDate===undefined)S.debutDate=null;
 if(S.strChoice===undefined)S.strChoice=null;
 // Migrate old str/sta to gp
 if(S.str||S.sta){S.gp=(S.str||0)*GP_STR+(S.sta||0)*GP_STA;delete S.str;delete S.sta;S.spentGp=(S.spentStr||0)*GP_STR+(S.spentSta||0)*GP_STA;delete S.spentStr;delete S.spentSta;}
@@ -553,7 +554,7 @@ return {grade:grade,score:score,reasons:reasons};
 // === WORKOUT TAB ===
 function renderWorkout(){
 var r=curRoutine();
-var h='<div class="header"><h1 class="hand">📔 아이돌 연습생 트레이닝</h1></div>';
+var h='<div class="header"><h1 class="hand">📔 아이돌이 될거야</h1></div>';
 var ev=getWeeklyGrade();
 h+='<div class="eval-card"><div style="font-size:12px;color:var(--tm);letter-spacing:1px">이번 주 평가</div>';
 h+='<div class="eval-grade '+ev.grade.toLowerCase()+'">'+ev.grade+'</div>';
@@ -949,6 +950,17 @@ h+='<div style="display:flex;align-items:center;gap:8px;justify-content:center">
 h+='<input type="number" step="0.1" id="target-w" value="'+(S.targetWeight||'')+'" placeholder="목표 kg" style="width:120px;border:3px solid var(--border);border-radius:0;padding:8px;font-size:14px;text-align:center;background:var(--card);color:var(--tx);font-family:inherit">';
 h+='<button class="btn-gold" style="padding:8px 14px" onclick="saveTargetWeight()">저장</button>';
 h+='</div></div>';
+// 데뷔평가 (기간 설정)
+h+='<div style="margin:12px 0;padding:14px;background:var(--card);border:3px solid var(--border);border-radius:0;box-shadow:var(--shadow)">';
+h+='<div class="hand" style="font-size:18px;color:var(--gold2);margin-bottom:10px;text-align:center;letter-spacing:2px">🎤 데뷔평가</div>';
+h+='<div style="font-size:11px;color:var(--tm);text-align:center;margin-bottom:8px">데뷔 목표일을 정해보자</div>';
+h+='<div style="display:flex;align-items:center;gap:8px;justify-content:center">';
+h+='<input type="date" id="debut-d" value="'+(S.debutDate||'')+'" style="border:3px solid var(--border);border-radius:0;padding:8px;font-size:13px;background:var(--card);color:var(--tx);font-family:inherit">';
+h+='<button class="btn-gold" style="padding:8px 14px" onclick="saveDebutDate()">저장</button>';
+h+='</div>';
+if(S.debutDate){var _dd=new Date(S.debutDate);var _nd=new Date();_nd.setHours(0,0,0,0);var _days=Math.ceil((_dd-_nd)/86400000);
+h+='<div class="hand" style="text-align:center;margin-top:10px;font-size:22px;color:var(--rose2)">'+(_days>0?'D-'+_days:(_days===0?'D-DAY ✨':'데뷔일 지남'))+'</div>';}
+h+='</div>';
 // 연습 설정
 h+='<div style="margin:12px 0;padding:14px;background:var(--card);border:3px solid var(--border);border-radius:0;box-shadow:var(--shadow)">';
 h+='<div class="hand" style="font-size:18px;color:var(--gold2);margin-bottom:10px;text-align:center;letter-spacing:2px">✨ 연습 설정</div>';
@@ -1012,6 +1024,9 @@ durs[name]=Math.max(5,Math.min(120,v));
 });
 S.config={sets:Math.max(1,Math.min(10,s)),reps:Math.max(1,Math.min(50,r)),coreSets:Math.max(1,Math.min(10,cs)),coreReps:Math.max(1,Math.min(50,cr)),cardioDurs:durs};
 save();render();toast('연습 설정 저장! ✨');
+}
+function saveDebutDate(){
+S.debutDate=document.getElementById('debut-d').value||null;save();render();toast('데뷔 목표일 저장! 🎤');
 }
 function saveTargetWeight(){
 var v=parseFloat(document.getElementById('target-w').value);
