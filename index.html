@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#FDF8F2">
+<title>연습생 다이어리</title>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Nanum+Pen+Script&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FDF8F2;--sf:#F8EFE4;--sf2:#F0E4D4;--tx:#5C4A3E;--tm:#8A7868;--th:#B8A898;--pink:#E8B4B8;--pink2:#D49498;--lav:#C8B5D9;--lav2:#A890C0;--rose:#D4A5A5;--rose2:#B8869A;--accent:#B8869A;--good:#88B8A8;--warn:#E8A878;--card:#FFFBF6;--paper:#FAF4E8;--border:#E0D0BC;--border2:#D4C0A8;--tape:#E8D4B0;--shadow:2px 3px 8px rgba(180,140,120,.15);--shadow2:3px 4px 12px rgba(180,140,120,.2)}
+@media(prefers-color-scheme:dark){:root{--bg:#201820;--sf:#2A2028;--sf2:#342838;--tx:#F0E0E8;--tm:#C0A8B8;--th:#907888;--card:#2A2028;--paper:#2A2028;--border:#4A3848;--border2:#5A4858}}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overscroll-behavior:none}
+body{font-family:'Noto Sans KR','Gaegu',sans-serif;background:var(--bg);color:var(--tx);font-weight:400;background-image:url("data:image/svg+xml,%3Csvg width='120' height='120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 .7 0 0 0 0 .55 0 0 0 0 .45 0 0 0 .04 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.hand{font-family:'Nanum Pen Script','Gaegu',cursive}
+.gae{font-family:'Gaegu',cursive;font-weight:700}
+#app{max-width:480px;margin:0 auto;min-height:100dvh;padding:env(safe-area-inset-top) 14px 80px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes bounceIn{0%{transform:scale(.3);opacity:0}50%{transform:scale(1.05)}70%{transform:scale(.95)}100%{transform:scale(1);opacity:1}}
+@keyframes jelly{0%,100%{transform:scale(1)}25%{transform:scale(.95,1.05)}50%{transform:scale(1.05,.95)}75%{transform:scale(.98,1.02)}}
+@keyframes coinSpin{0%{transform:rotateY(0)}100%{transform:rotateY(360deg)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes pixelBlink{0%,90%,100%{opacity:1}95%{opacity:.4}}
+@keyframes pixelCursor{0%,100%{border-color:var(--gold)}50%{border-color:transparent}}
+
+/* === PIXEL BORDER UTIL === */
+.pix-border{border:4px solid var(--pix);box-shadow:var(--shadow),inset -2px -2px 0 rgba(0,0,0,.15),inset 2px 2px 0 rgba(255,255,255,.25);border-radius:0}
+.pix-card{background:var(--card);border:4px solid var(--border);box-shadow:var(--shadow),inset -2px -2px 0 rgba(0,0,0,.1),inset 2px 2px 0 rgba(255,255,255,.3);border-radius:0}
+
+/* === TABS === */
+.tabs{position:fixed;bottom:0;left:0;right:0;background:rgba(253,248,242,.95);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--border);display:flex;justify-content:center;z-index:100;padding:4px 0 env(safe-area-inset-bottom);box-shadow:0 -2px 12px rgba(180,140,120,.1)}
+.tabs-inner{display:flex;max-width:480px;width:100%}
+.tab{flex:1;padding:8px 0;text-align:center;font-size:10px;color:var(--th);border:none;background:none;cursor:pointer;font-family:inherit;transition:all .25s;font-weight:500;letter-spacing:.5px}
+.tab-icon{font-size:22px;display:block;margin-bottom:2px;transition:transform .25s}
+.tab.active{color:var(--rose2);font-weight:700}
+.tab.active .tab-icon{transform:scale(1.15)}
+
+/* === DP CARD (data card) === */
+.gp-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin:10px 0;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);position:relative}
+.gp-bar::before{content:'';position:absolute;top:-6px;left:20px;width:60px;height:14px;background:rgba(232,212,176,.7);border-radius:2px;transform:rotate(-3deg);box-shadow:1px 1px 3px rgba(180,140,120,.2)}
+.gp-coin{font-size:22px;animation:floaty 3s ease-in-out infinite}
+.gp-info{text-align:left}
+.gp-label{font-size:10px;color:var(--tm);font-weight:500;letter-spacing:1px}
+.gp-val{font-size:22px;font-weight:700;color:var(--rose2);font-family:'Gaegu',cursive}
+.gp-avail{font-size:10px;color:var(--th)}
+.gp-streak{text-align:center;padding:6px 10px;background:var(--sf);border-radius:12px;border:1px solid var(--border)}
+.gp-streak-num{font-size:16px;font-weight:700;color:var(--warn);font-family:'Gaegu',cursive}
+.gp-streak-label{font-size:9px;color:var(--tm)}
+
+/* === HEADER === */
+.header{padding:18px 4px 8px;text-align:center;position:relative}
+.header h1{font-size:26px;font-weight:700;color:var(--rose2);letter-spacing:2px;font-family:'Nanum Pen Script',cursive}
+.header-sub{font-size:12px;font-weight:400;color:var(--tm);margin-top:2px;letter-spacing:1px;font-style:italic}
+.header-date{font-size:11px;color:var(--th);margin-top:4px;font-family:'Gaegu',cursive}
+.header-day{display:inline-block;margin-top:2px;padding:2px 10px;background:var(--sf);border-radius:20px;font-size:10px;color:var(--rose2);font-weight:700;border:1px dashed var(--border2)}
+.quest-type{display:inline-block;padding:3px 12px;border-radius:20px;font-size:11px;font-weight:500;margin-top:4px;margin-bottom:0;letter-spacing:.5px}
+.quest-type.str{background:rgba(232,180,184,.2);color:var(--rose2);border:1px solid var(--rose)}
+.quest-type.sta{background:rgba(200,181,217,.2);color:var(--lav2);border:1px solid var(--lav)}
+
+/* === SCHEDULE (Diary page) === */
+.guild-board{position:relative;margin:12px 0;padding:22px 20px 20px;background:var(--paper);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow2);background-image:repeating-linear-gradient(transparent,transparent 31px,rgba(200,160,140,.15) 31px,rgba(200,160,140,.15) 32px)}
+.guild-board::before{content:'';position:absolute;top:-8px;right:24px;width:70px;height:18px;background:linear-gradient(135deg,rgba(232,180,184,.7),rgba(200,181,217,.6));border-radius:2px;transform:rotate(4deg);box-shadow:1px 2px 4px rgba(180,140,120,.2)}
+.guild-board::after{content:'🌸';position:absolute;top:-2px;left:16px;font-size:14px;transform:rotate(-10deg)}
+.board-title{font-family:'Nanum Pen Script',cursive;font-size:20px;color:var(--rose2);text-align:center;margin-bottom:12px;letter-spacing:1px}
+.board-slots{display:flex;flex-direction:column;gap:2px}
+.board-slot{display:flex;align-items:center;gap:8px;padding:6px 10px;font-size:14px;color:var(--tm);line-height:1.6;cursor:default;transition:all .25s;border-radius:8px;font-family:'Gaegu',cursive;font-weight:400}
+.board-slot .step-check{width:18px;height:18px;border:1.5px solid var(--border2);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--rose2)}
+.board-slot .step-label{flex:1}
+.board-slot .step-gp{font-size:11px;color:var(--th);white-space:nowrap}
+.board-slot.now{background:linear-gradient(90deg,rgba(232,180,184,.25),rgba(200,181,217,.15));color:var(--rose2);font-weight:700}
+.board-slot.now .step-check{border-color:var(--rose2);background:var(--rose)}
+.board-slot.now .step-gp{color:var(--rose2)}
+.board-slot.done-step{color:var(--th);opacity:.6;text-decoration:line-through;text-decoration-color:var(--border2)}
+.board-slot.done-step .step-check{background:var(--good);border-color:var(--good);color:#fff}
+.board-slot.done-step .step-check::before{content:'✓'}
+
+/* === WEIGHT === */
+.weight-row{display:flex;align-items:center;gap:8px;padding:6px 12px;margin:2px 0}
+.weight-row .wv{font-size:16px;font-weight:400;flex:1;color:var(--blue)}
+.weight-row .wv span{font-size:11px;color:var(--th);font-weight:400}
+.weight-row input{width:60px;border:3px solid var(--border);border-radius:0;padding:6px;font-size:13px;text-align:center;background:var(--card);color:var(--tx);font-family:inherit}
+.weight-row input:focus{border-color:var(--gold);outline:none}
+.weight-row button{background:var(--blue);color:#fff;border:3px solid var(--blue2);border-radius:0;padding:6px 12px;font-size:12px;font-weight:400;font-family:inherit;cursor:pointer;box-shadow:var(--shadow)}
+.weight-row button:active{transform:translateY(2px);box-shadow:none}
+
+/* === QUEST BOARD (exercises) === */
+.quest-board{margin:4px 0}
+.quest-board-title{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--rose2);font-weight:700;margin-bottom:8px;padding:0 2px;font-family:'Gaegu',cursive}
+.ex-list{display:flex;flex-direction:column;gap:10px}
+.ex-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;box-shadow:var(--shadow);transition:all .25s}
+.ex-card.done{opacity:.5;border-style:dashed}
+.ex-card.done .ex-name{text-decoration:line-through}
+.ex-name{font-size:15px;font-weight:700;margin-bottom:2px;font-family:'Gaegu',cursive;color:var(--tx)}
+.ex-desc{font-size:12px;color:var(--tm);margin-bottom:10px;font-weight:400}
+.ex-sets{display:flex;gap:8px;flex-wrap:wrap}
+.set-btn{width:40px;height:40px;border-radius:50%;border:1.5px solid var(--border2);background:var(--sf);font-size:13px;font-weight:700;color:var(--tm);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;font-family:'Gaegu',cursive}
+.set-btn.done{background:var(--rose);border-color:var(--rose2);color:#fff;box-shadow:0 3px 8px rgba(212,148,152,.3);animation:bounceIn .3s ease}
+.set-btn:active{transform:scale(.9)}
+.how-btn{font-size:12px;color:var(--lav2);background:none;border:none;cursor:pointer;font-family:inherit;margin-top:8px;font-weight:500}
+.how-text{font-size:12px;color:var(--tm);line-height:1.7;margin-top:6px;white-space:pre-line;display:none;background:var(--sf);padding:10px;border-radius:10px;border:1px dashed var(--border2)}
+
+/* === REST TIMER === */
+.rest-timer{margin-top:8px;padding:8px 12px;background:var(--sf);border-radius:12px;display:flex;align-items:center;gap:8px;border:1px solid var(--border);animation:bounceIn .25s ease}
+.rest-timer-bar{flex:1;height:8px;background:var(--sf2);border-radius:20px;overflow:hidden;border:1px solid var(--border2)}
+.rest-timer-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--lav),var(--rose));transition:width .3s ease}
+.rest-timer-text{font-size:12px;font-weight:700;color:var(--lav2);min-width:36px;text-align:right;font-family:'Gaegu',cursive}
+.rest-timer.done-timer .rest-timer-fill{background:linear-gradient(90deg,var(--good),var(--rose))}
+.rest-timer.done-timer .rest-timer-text{color:var(--good);animation:jelly .5s ease}
+
+/* === PROGRESS === */
+.progress-bar{height:10px;background:var(--sf2);border:1px solid var(--border2);border-radius:20px;margin:4px 0 2px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--lav),var(--rose));transition:width .3s ease;border-radius:20px}
+.progress-text{font-size:12px;color:var(--tm);text-align:center;margin-bottom:3px;font-weight:500}
+
+/* === CARDIO === */
+.walk-card{text-align:center;padding:24px 16px;margin:10px 0;border:1px solid var(--border);border-radius:14px;background:var(--card);box-shadow:var(--shadow)}
+.walk-card h2{font-size:18px;margin-bottom:6px;font-weight:700;font-family:'Gaegu',cursive;color:var(--rose2)}
+.walk-card p{font-size:12px;color:var(--tm);line-height:1.6;margin-bottom:12px}
+
+/* === DONE CARD === */
+.done-card{text-align:center;padding:24px 14px;margin:10px 0;animation:bounceIn .4s ease}
+.done-card h2{font-size:22px;margin-bottom:6px;animation:jelly .6s ease;font-family:'Nanum Pen Script',cursive;color:var(--rose2)}
+.done-card p{font-size:12px;color:var(--tm);margin-bottom:14px}
+.done-btns{display:flex;flex-direction:column;gap:8px}
+
+/* === BUTTONS === */
+.btn-primary{padding:14px;background:linear-gradient(135deg,var(--rose),var(--rose2));color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;box-shadow:var(--shadow);transition:all .2s}
+.btn-primary:active{transform:translateY(2px);box-shadow:0 1px 3px rgba(180,140,120,.15)}
+.btn-ghost{padding:12px;background:var(--card);border:1px solid var(--border);border-radius:12px;font-size:13px;color:var(--tx);cursor:pointer;font-family:inherit;width:100%;font-weight:500;box-shadow:var(--shadow);transition:all .2s}
+.btn-ghost:active{transform:translateY(2px);box-shadow:0 1px 3px rgba(180,140,120,.1)}
+.btn-skip{padding:10px;background:var(--sf);border:1px dashed var(--border2);border-radius:12px;font-size:12px;color:var(--th);cursor:pointer;font-family:inherit;width:100%;transition:all .2s}
+.btn-skip:active{transform:translateY(2px)}
+.btn-gold{padding:14px;background:linear-gradient(135deg,var(--rose) 0%,var(--lav) 100%);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;box-shadow:var(--shadow2);transition:all .2s;letter-spacing:.5px}
+.btn-gold:active{transform:translateY(2px);box-shadow:var(--shadow)}
+.btn-gold:disabled{opacity:.4;cursor:not-allowed}
+
+/* === SHOP ITEMS (Polaroid) === */
+.shop-section{margin:14px 0}
+.shop-section-title{font-size:16px;font-weight:700;color:var(--rose2);margin-bottom:10px;display:flex;align-items:center;gap:6px;font-family:'Gaegu',cursive}
+.shop-item{background:#fff;border:1px solid var(--border);border-radius:4px;padding:10px 10px 14px;margin-bottom:14px;box-shadow:var(--shadow2);position:relative;transform:rotate(-.5deg);transition:all .25s}
+.shop-item:nth-child(even){transform:rotate(.8deg)}
+.shop-item:hover{transform:rotate(0) scale(1.01)}
+.shop-item::before{content:'';position:absolute;top:-5px;left:50%;width:50px;height:12px;background:rgba(232,212,176,.7);border-radius:1px;transform:translateX(-50%) rotate(-2deg);box-shadow:1px 1px 3px rgba(180,140,120,.15)}
+.shop-item.unlocked{border-color:var(--rose);background:#FFF8F5}
+@media(prefers-color-scheme:dark){.shop-item.unlocked{background:#3A2028}}
+.shop-item-top{display:flex;gap:12px;align-items:center}
+.shop-item-img{width:80px;height:80px;border-radius:2px;object-fit:cover;border:1px solid var(--border);flex-shrink:0;box-shadow:0 2px 6px rgba(180,140,120,.15)}
+.shop-item-img.locked{filter:grayscale(.7) brightness(.95)}
+.shop-item.unlocked .shop-item-img{border-color:var(--rose);filter:none}
+.shop-item-info{flex:1;min-width:0}
+.shop-item-name{font-size:15px;font-weight:700;font-family:'Gaegu',cursive;color:var(--tx)}
+.shop-item-price{font-size:11px;color:var(--tm)}
+.shop-item-cost{display:inline-block;margin-top:4px;padding:3px 10px;background:rgba(232,180,184,.2);border:1px solid var(--rose);border-radius:20px;font-size:11px;font-weight:500;color:var(--rose2)}
+.shop-prog{margin-top:10px}
+.shop-prog-bar{height:8px;background:var(--sf2);border:1px solid var(--border2);border-radius:20px;overflow:hidden}
+.shop-prog-fill{height:100%;background:linear-gradient(90deg,var(--rose),var(--lav));border-radius:20px;transition:width .3s ease}
+.shop-prog-info{display:flex;justify-content:space-between;margin-top:5px;font-size:10px;color:var(--th);font-weight:500}
+.shop-exchange-btn{margin-top:10px;padding:10px;background:linear-gradient(135deg,var(--rose),var(--rose2));color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;box-shadow:var(--shadow)}
+.shop-exchange-btn:active{transform:translateY(2px);box-shadow:none}
+.shop-exchange-btn:disabled{opacity:.35;cursor:not-allowed}
+.shop-unlocked-badge{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;background:var(--rose);color:#fff;border-radius:20px;font-size:11px;font-weight:700;margin-top:6px;box-shadow:var(--shadow)}
+.shop-add-btn{margin-top:10px;padding:14px;background:var(--sf);border:1.5px dashed var(--border2);border-radius:12px;text-align:center;cursor:pointer;font-family:inherit;color:var(--tm);font-size:13px;font-weight:500;width:100%}
+.shop-add-btn:active{transform:translateY(2px)}
+
+/* === MINI SHOP PREVIEW === */
+.mini-shop{margin:10px 0}
+.mini-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;box-shadow:var(--shadow)}
+.mini-item.unlocked{border-color:var(--rose)}
+.mini-item-img{width:56px;height:56px;border-radius:8px;object-fit:cover;border:1px solid var(--border)}
+.mini-item-img.locked{filter:grayscale(.6)}
+.mini-item.unlocked .mini-item-img{border-color:var(--rose);filter:none}
+.mini-item-info{flex:1;min-width:0}
+.mini-item-name{font-size:13px;font-weight:700;font-family:'Gaegu',cursive;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini-prog{height:5px;background:var(--sf2);border-radius:20px;overflow:hidden;margin-top:4px}
+.mini-prog-fill{height:100%;background:linear-gradient(90deg,var(--rose),var(--lav));border-radius:20px}
+.mini-item-gp{font-size:11px;color:var(--rose2);font-weight:700;font-family:'Gaegu',cursive;white-space:nowrap}
+
+/* === CALENDAR === */
+.cal-month{text-align:center;font-size:17px;font-weight:700;margin:16px 0 12px;display:flex;align-items:center;justify-content:center;gap:14px;color:var(--rose2);font-family:'Gaegu',cursive}
+.cal-nav{background:var(--card);border:1px solid var(--border);font-size:14px;cursor:pointer;color:var(--rose2);padding:4px 12px;border-radius:10px;box-shadow:var(--shadow);font-weight:700}
+.cal-nav:active{transform:translateY(1px)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:12px}
+.cal-day-header{text-align:center;font-size:11px;color:var(--th);padding:4px 0;font-weight:700;font-family:'Gaegu',cursive}
+.cal-day{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:10px;font-size:12px;color:var(--tm);cursor:pointer;transition:all .2s;position:relative;font-weight:500}
+.cal-day:active{transform:scale(.9)}
+.cal-day.today{font-weight:700;color:var(--rose2);border:1.5px solid var(--rose)}
+.cal-day.has-record{background:rgba(232,180,184,.2);color:var(--rose2);font-weight:700}
+.cal-day.has-record::after{content:'♡';font-size:8px;color:var(--rose);position:absolute;bottom:2px}
+.cal-day.selected{background:var(--rose);color:#fff;font-weight:700;box-shadow:var(--shadow)}
+.cal-day.selected::after{color:#fff}
+.cal-detail{border:1px solid var(--border);border-radius:12px;padding:14px;margin:6px 0;background:var(--card);box-shadow:var(--shadow);animation:bounceIn .25s ease}
+.cal-detail-title{font-size:14px;font-weight:700;margin-bottom:8px;color:var(--rose2);font-family:'Gaegu',cursive}
+.cal-detail-item{font-size:12px;color:var(--tm);padding:4px 0}
+
+/* === CONDITION CARD === */
+.cond-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin:10px 0;box-shadow:var(--shadow);position:relative}
+.cond-card::before{content:'';position:absolute;top:-6px;right:20px;width:50px;height:14px;background:rgba(200,181,217,.5);border-radius:2px;transform:rotate(3deg)}
+.cond-title{font-size:14px;font-weight:700;color:var(--rose2);margin-bottom:10px;font-family:'Gaegu',cursive;display:flex;align-items:center;gap:6px}
+.cond-main{display:flex;align-items:baseline;gap:6px;justify-content:center;margin:8px 0}
+.cond-num{font-size:38px;font-weight:700;color:var(--rose2);font-family:'Gaegu',cursive;line-height:1}
+.cond-unit{font-size:13px;color:var(--tm)}
+.cond-goal{text-align:center;font-size:11px;color:var(--tm);margin-bottom:8px}
+.cond-goal b{color:var(--lav2);font-family:'Gaegu',cursive}
+.cond-input-row{display:flex;gap:8px;margin:10px 0}
+.cond-input-row input{flex:1;border:1px solid var(--border);border-radius:10px;padding:10px;font-size:14px;text-align:center;background:var(--sf);color:var(--tx);font-family:inherit}
+.cond-input-row input:focus{border-color:var(--rose);outline:none;background:#fff}
+.cond-input-row button{background:linear-gradient(135deg,var(--rose),var(--rose2));color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer}
+.cond-sub-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.cond-sub{background:var(--sf);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center}
+.cond-sub-label{font-size:10px;color:var(--tm);margin-bottom:4px}
+.cond-sub-val{font-size:15px;font-weight:700;color:var(--rose2);font-family:'Gaegu',cursive}
+.cond-mood-row{display:flex;justify-content:space-around;margin-top:8px;padding:8px;background:var(--sf);border-radius:10px}
+.cond-mood-btn{font-size:22px;background:none;border:none;cursor:pointer;padding:4px;opacity:.4;transition:all .2s;border-radius:8px}
+.cond-mood-btn.sel{opacity:1;background:rgba(232,180,184,.3);transform:scale(1.15)}
+.water-dots{display:flex;gap:4px;justify-content:center;margin-top:6px}
+.water-dot{width:16px;height:16px;border-radius:50%;background:var(--sf2);border:1.5px solid var(--border2);cursor:pointer;transition:all .15s}
+.water-dot.filled{background:var(--lav);border-color:var(--lav2)}
+
+/* === EVALUATION CARD === */
+.eval-card{background:linear-gradient(135deg,#fff,var(--paper));border:1px solid var(--border);border-radius:16px;padding:18px;margin:12px 0;box-shadow:var(--shadow2);text-align:center;position:relative}
+.eval-card::before{content:'';position:absolute;top:-6px;left:24px;width:48px;height:14px;background:rgba(232,180,184,.6);border-radius:2px;transform:rotate(-4deg)}
+.eval-label{font-size:11px;color:var(--tm);letter-spacing:2px;font-weight:500}
+.eval-grade{font-size:56px;font-weight:700;margin:4px 0;font-family:'Nanum Pen Script',cursive;line-height:1}
+.eval-grade.s{color:#D4A017}
+.eval-grade.a{color:var(--rose2)}
+.eval-grade.b{color:var(--lav2)}
+.eval-grade.c{color:var(--good)}
+.eval-grade.d{color:var(--th)}
+.eval-desc{font-size:13px;color:var(--rose2);font-family:'Gaegu',cursive;font-weight:700}
+.eval-sub{font-size:10px;color:var(--th);margin-top:4px}
+
+/* === WEIGHT / RECORDS === */
+.wt-current{text-align:center;padding:18px 0}
+.wt-current .wt-num{font-size:42px;font-weight:700;color:var(--rose2);font-family:'Gaegu',cursive}
+.wt-current .wt-unit{font-size:13px;color:var(--tm)}
+.wt-input-row{display:flex;gap:8px;margin:0 0 12px;align-items:center}
+.wt-input-row input{flex:1;border:1px solid var(--border);border-radius:10px;padding:10px;font-size:14px;text-align:center;background:var(--sf);color:var(--tx);font-family:inherit}
+.wt-input-row input:focus{border-color:var(--rose);outline:none;background:#fff}
+.wt-input-row button{background:linear-gradient(135deg,var(--rose),var(--rose2));color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer}
+.wt-chart{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin:12px 0;box-shadow:var(--shadow)}
+.wt-chart canvas{width:100%;height:200px}
+
+/* === MODALS === */
+.modal-bg{position:fixed;inset:0;background:rgba(90,70,60,.5);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center;padding:18px}
+.modal-box{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:24px;max-width:340px;width:100%;text-align:center;box-shadow:0 12px 32px rgba(180,140,120,.3);animation:bounceIn .3s ease}
+.modal-box h3{font-size:18px;margin-bottom:10px;font-weight:700;color:var(--rose2);font-family:'Gaegu',cursive}
+.modal-box p{font-size:13px;color:var(--tm);margin-bottom:14px;line-height:1.6}
+.modal-btns{display:flex;gap:8px}
+.modal-btns button{flex:1;padding:12px;border-radius:10px;font-size:13px;font-weight:700;border:1px solid var(--border);cursor:pointer;font-family:inherit;background:var(--card);color:var(--tx)}
+.modal-btns button:active{transform:translateY(1px)}
+
+/* === COMPLETE POPUP === */
+.complete-popup{position:fixed;inset:0;background:rgba(90,70,60,.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center;padding:18px}
+.complete-box{background:var(--card);border:1px solid var(--rose);border-radius:18px;padding:24px;max-width:340px;width:100%;text-align:center;box-shadow:0 12px 32px rgba(212,148,152,.3);animation:bounceIn .35s ease}
+.gp-gain{font-size:38px;font-weight:700;color:var(--rose2);margin:10px 0;font-family:'Nanum Pen Script',cursive;animation:jelly .5s ease}
+.gp-gain-sub{font-size:12px;color:var(--tm);margin-bottom:8px}
+.complete-comment{font-size:12px;color:var(--tm);margin:10px 0;padding:12px;background:var(--paper);border-radius:12px;border:1px dashed var(--border2);line-height:1.7;text-align:left;font-family:'Gaegu',cursive;font-weight:400}
+
+/* === CROP === */
+.crop-modal{position:fixed;inset:0;background:rgba(90,70,60,.85);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.crop-title{color:#fff;font-size:14px;margin-bottom:12px;font-weight:700;font-family:'Gaegu',cursive}
+.crop-area{width:200px;height:200px;overflow:hidden;border-radius:12px;border:3px solid var(--rose);position:relative;touch-action:none;cursor:grab;background:#fff}
+.crop-area img{position:absolute;max-width:none;max-height:none;user-select:none;-webkit-user-drag:none}
+.crop-btns{display:flex;gap:10px;margin-top:14px}
+.crop-btns button{padding:10px 22px;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:inherit}
+.crop-save{background:var(--rose);color:#fff}
+.crop-cancel{background:rgba(255,255,255,.2);color:#fff}
+
+/* === MISC === */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--rose2);color:#fff;padding:12px 22px;border-radius:24px;font-size:13px;font-weight:700;opacity:0;transition:all .3s;pointer-events:none;z-index:999;box-shadow:0 6px 20px rgba(180,140,120,.3);font-family:'Gaegu',cursive}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);animation:jelly .3s ease}
+.confetti{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1000}
+.confetti-piece{position:absolute;border-radius:0;animation:confettiFall 2s ease-in forwards}
+@keyframes confettiFall{0%{opacity:1;transform:translateY(-20px) rotate(0deg)}50%{opacity:1}100%{opacity:0;transform:translateY(100vh) rotate(720deg) scale(.5)}}
+.confetti-piece.from-bottom{top:auto;bottom:0;animation:confettiRise 2s ease-in forwards}
+@keyframes confettiRise{0%{opacity:1;transform:translateY(20px) rotate(0deg)}50%{opacity:1}100%{opacity:0;transform:translateY(-100vh) rotate(-720deg) scale(.5)}}
+
+.price-row{display:flex;align-items:center;gap:8px;margin-top:8px;justify-content:center}
+.price-row input{width:130px;border:3px solid var(--border);border-radius:0;padding:8px;font-size:13px;text-align:center;background:var(--card);color:var(--tx);font-family:inherit}
+.price-row input:focus{border-color:var(--gold);outline:none}
+.price-row span{font-size:12px;color:var(--th);font-weight:400}
+.cost-input-row{display:flex;gap:8px;align-items:center;margin-top:8px;justify-content:center}
+.cost-input-row input{width:60px;border:3px solid var(--gold);border-radius:0;padding:6px;font-size:14px;text-align:center;background:var(--card);color:var(--tx);font-family:'DotGothic16',monospace}
+.cost-input-row input:focus{outline:none;border-color:var(--gold2)}
+.cost-input-row label{font-size:12px;font-weight:400;color:var(--gold2)}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="modal"></div>
+<div class="toast" id="toast"></div>
+<div class="tabs"><div class="tabs-inner">
+<button class="tab active" onclick="switchTab(0)"><span class="tab-icon">📔</span>오늘의 연습</button>
+<button class="tab" onclick="switchTab(1)"><span class="tab-icon">💫</span>스타일링 룸</button>
+<button class="tab" onclick="switchTab(2)"><span class="tab-icon">📓</span>연습 일지</button>
+<button class="tab" onclick="switchTab(3)"><span class="tab-icon">🎀</span>프로필</button>
+</div></div>
+<script>
+// === MANAGER COMMENTS ===
+var COMMENTS_STR=[
+'오늘 퍼포먼스 좋았어, 이대로만 가자.',
+'프로듀서님이 고개를 끄덕이셨어.',
+'무대 위의 너, 점점 빛나고 있어.',
+'동작 라인이 살아나고 있어. 계속 가자.',
+'카메라에 담길 너의 모습이 기대돼.',
+'오늘 연습 기록 다이어리에 남겨둘게.',
+'땀 한 방울이 데뷔를 만들어, 잘했어.',
+'거울 속의 너, 확실히 달라졌어.',
+'안무 디테일이 살아났어. 멋졌어.',
+'프로듀서님 메모: "성장 중".',
+'한 곡 한 곡이 너의 무대가 될 거야.',
+'오늘도 진짜 멋졌어, 우리 연습생.'
+];
+var COMMENTS_STA=[
+'무대 체력 훈련 완료! 호흡이 좋아졌어.',
+'풀곡도 거뜬해질 거야, 잘했어.',
+'심장 박동이 리듬을 익히고 있어.',
+'춤추면서도 노래할 수 있는 체력, 만들어지고 있어.',
+'데뷔 무대에서 빛날 체력이 쌓이는 중.',
+'오늘도 끝까지 해냈네, 멋져.',
+'스태미나가 곧 카리스마야.',
+'무대 위 마지막 1분을 위한 훈련, 성공.',
+'호흡 조절까지 완벽해지고 있어.',
+'프로듀서님이 박수 치셨어 (마음속으로).',
+'네 무대 체력이 곧 너의 무기야.',
+'오늘 훈련, 다이어리에 별표 쳐둘게.'
+];
+var GP_STR=12;
+var GP_STA=8;
+
+// === EXERCISE POOL ===
+var POOL={
+compound:[
+{name:'스쿼트',sets:3,reps:10,how:'발 어깨너비, 발끝 살짝 바깥\n엉덩이 뒤로 빼며 허벅지 평행까지\n무릎이 발끝 방향 따라가게\n발뒤꿈치로 밀며 올라오기'},
+{name:'고블릿 스쿼트',sets:3,reps:10,how:'덤벨/물병 가슴 앞에 잡기\n스쿼트 자세로 앉기\n팔꿈치가 무릎 안쪽에 닿을 정도\n발뒤꿈치로 밀며 올라오기'},
+{name:'런지',sets:3,reps:10,how:'한 발 앞으로 크게 내딛기\n뒷무릎 바닥 가까이 내려가기\n상체 곧게, 앞무릎 90도\n앞발 뒤꿈치로 밀며 원위치'},
+{name:'와이드 스쿼트',sets:3,reps:10,how:'발을 어깨보다 넓게, 발끝 45도 바깥\n엉덩이 뒤로 빼며 깊게 앉기\n내전근(허벅지 안쪽) 자극 느끼기\n발뒤꿈치로 밀며 올라오기'},
+{name:'스플릿 스쿼트',sets:3,reps:10,how:'한 발 앞, 한 발 뒤로 벌리고 서기\n뒷무릎 바닥 가까이 내리기\n상체 곧게 유지\n앞발로 밀며 올라오기, 양쪽 번갈아'}
+],
+hinge:[
+{name:'루마니안 데드리프트',sets:3,reps:10,how:'발 골반너비, 무릎 살짝 굽힘 유지\n엉덩이를 뒤로 밀며 상체 숙이기\n햄스트링 당김 느끼면 멈추기\n둔근 쥐어짜며 올라오기'},
+{name:'덤벨 데드리프트',sets:3,reps:10,how:'양손 덤벨, 발 골반너비\n엉덩이 뒤로 밀며 숙이기\n덤벨이 정강이 따라 내려가게\n둔근·햄스트링으로 올라오기'},
+{name:'힙쓰러스트',sets:3,reps:12,how:'등 상부를 의자/소파에 기대기\n발바닥 바닥, 무릎 90도\n둔근 힘주며 골반 들어올리기\n정점 2초 유지'},
+{name:'글루트브릿지',sets:3,reps:12,how:'누워서 무릎 굽히고 발바닥 바닥에\n둔근 힘주며 골반 들어올리기\n어깨~무릎 일직선, 2초 유지\n천천히 내리기'},
+{name:'싱글레그 데드리프트',sets:3,reps:10,how:'한 발로 서기, 반대 다리 뒤로 뻗기\n엉덩이 뒤로 밀며 상체 숙이기\n균형 잡으며 햄스트링 당김 느끼기\n천천히 올라오기, 양쪽 번갈아'}
+],
+pull:[
+{name:'덤벨 로우',sets:3,reps:10,how:'한 손+한 무릎 벤치에 짚기\n반대 손으로 덤벨/밴드 당기기\n팔꿈치를 골반 쪽으로 당기듯\n천천히 내리기'},
+{name:'밴드 로우',sets:3,reps:10,how:'밴드를 문에 걸거나 높은 곳에 고정\n양손으로 당기기\n견갑골 모으듯 등 수축\n천천히 돌아가기'},
+{name:'밴드 풀어파트',sets:3,reps:12,how:'밴드를 양손으로 어깨너비 잡기\n팔 펴고 가슴 높이에서 시작\n양쪽으로 당겨 벌리기\n견갑골 모으며 2초 유지'},
+{name:'슈퍼맨',sets:3,reps:10,how:'엎드려서 팔다리 쭉 펴기\n동시에 팔·다리·가슴 들어올리기\n2초 유지 후 천천히 내리기\n허리 과하게 꺾지 않기'}
+],
+push:[
+{name:'인클라인 푸시업',sets:3,reps:10,how:'의자나 벽에 손 짚고 푸시업\n몸 일직선 유지\n가슴이 손 높이 가까이 올 때까지\n밀어 올리기'},
+{name:'푸시업',sets:3,reps:10,how:'손 어깨너비, 몸 일직선\n가슴이 바닥 가까이 올 때까지\n코어 힘주고 밀어 올리기\n어려우면 무릎 대고'},
+{name:'숄더프레스',sets:3,reps:10,how:'양손 덤벨/밴드 어깨 높이\n머리 위로 밀어올리기\n팔꿈치 완전히 펴기\n천천히 내리기'},
+{name:'니 푸시업',sets:3,reps:12,how:'무릎 대고 푸시업 자세\n손 어깨너비, 몸 일직선(머리~무릎)\n가슴 바닥 가까이 내리기\n밀어 올리기'}
+],
+core:[
+{name:'데드버그',sets:2,reps:10,how:'누워서 양팔 천장, 무릎 90도\n오른팔+왼다리 동시에 뻗기\n허리가 바닥에서 뜨지 않게\n교대 반복'},
+{name:'플랭크',sets:2,reps:'30초',how:'팔꿈치 바닥, 어깨 바로 아래\n머리~발끝 일직선 유지\n배꼽 척추 쪽으로 당기듯\n엉덩이 올라가거나 처지지 않게'},
+{name:'팔로프 프레스',sets:2,reps:10,how:'밴드를 옆에 고정, 양손으로 잡기\n가슴 앞에서 팔 쭉 뻗기\n몸이 돌아가지 않게 코어 버티기\n천천히 당겨오기. 양쪽 반복'},
+{name:'바이시클 크런치',sets:2,reps:12,how:'누워서 머리 살짝 들기\n오른 팔꿈치-왼 무릎 터치\n반대쪽 다리는 쭉 뻗기\n교대로 자전거 페달 돌리듯'},
+{name:'사이드 플랭크',sets:2,reps:'20초',how:'옆으로 누워 팔꿈치 짚기\n골반 들어올려 몸 일직선\n위쪽 손 허리 또는 하늘\n양쪽 각각 수행'}
+]
+};
+function seededRand(seed){return function(){seed=(seed*16807+0)%2147483647;return(seed-1)/2147483646}}
+function pickRandom(arr,n,rng){var a=arr.slice();var res=[];for(var i=0;i<n&&a.length;i++){var idx=Math.floor(rng()*a.length);res.push(a.splice(idx,1)[0])}return res}
+function generateRoutine(idx){
+var seed=idx*7919+31;var rng=seededRand(seed);
+var labels=['A','B','C'];var icons=['✨','💫','🌙'];var posInCycle=idx%5;var strMap={0:0,2:1,4:2};var li=strMap[posInCycle]!==undefined?strMap[posInCycle]:0;
+var base=[pickRandom(POOL.compound,1,rng)[0],pickRandom(POOL.hinge,1,rng)[0],pickRandom(rng()<0.5?POOL.pull:POOL.push,1,rng)[0],pickRandom(POOL.core,1,rng)[0]];
+var exercises=base.map(function(ex,i){var key=idx+'_'+i;var e=S.swapped&&S.swapped[key]?S.swapped[key]:ex;
+var c=S.config||{sets:3,reps:10,coreSets:2,coreReps:10};
+var isCore=i===3;
+return {name:e.name,sets:isCore?c.coreSets:c.sets,reps:isCore?(typeof e.reps==='string'?e.reps:c.coreReps):(typeof e.reps==='string'?e.reps:c.reps),how:e.how};});
+return {type:'strength',name:'퍼포먼스 연습 '+labels[li],icon:icons[li],short:'퍼포먼스'+labels[li],exercises:exercises};
+}
+var CARDIO_OPTIONS=[
+{name:'런닝',icon:'💃',dur:'20-30분',desc:'가볍게 달리기, 무대 체력 강화'},
+{name:'빠르게 걷기',icon:'🚶‍♀️',dur:'30-40분',desc:'파워워킹, 지구력 훈련'},
+{name:'자전거',icon:'🚴‍♀️',dur:'20-30분',desc:'저강도 유산소'},
+{name:'줄넘기',icon:'🤸‍♀️',dur:'15-20분',desc:'고강도 전신 유산소'}
+];
+function getAllCardio(){
+var durs=(S.config&&S.config.cardioDurs)||{};
+var list=CARDIO_OPTIONS.map(function(c){return {name:c.name,icon:c.icon,dur:durs[c.name]?durs[c.name]+'분':c.dur,desc:c.desc}});
+(S.customCardio||[]).forEach(function(c){list.push({name:c.name,icon:c.icon||'🏃',dur:durs[c.name]?durs[c.name]+'분':(c.dur||'25분'),desc:c.desc||'커스텀 유산소'})});
+return list;
+}
+function generateCardio(idx){
+var seed=idx*4219+17;var rng=seededRand(seed);
+var pick=CARDIO_OPTIONS[Math.floor(rng()*CARDIO_OPTIONS.length)];
+return {type:'cardio',name:'무대 체력 훈련',icon:'💃',short:'무대체력',dur:pick.dur,desc:pick.desc,cardioName:pick.name};
+}
+var CYCLE_PATTERN=['strength','cardio','strength','cardio','strength'];
+function getRoutineForCycle(gi){var pos=gi%5;return CYCLE_PATTERN[pos]==='cardio'?generateCardio(gi):generateRoutine(gi)}
+var SWAP_MAX=3;
+
+// === STATE ===
+var S=JSON.parse(localStorage.getItem('wk_idol')||localStorage.getItem('wk_prince')||'{}');
+if(S.idx===undefined)S.idx=0;
+if(!S.sets)S.sets={};
+if(!S.weights)S.weights=[];
+if(!S.history)S.history=[];
+if(!S.swaps)S.swaps={};
+if(!S.swapped)S.swapped={};
+if(!S.extras)S.extras=[];
+if(!S.customPool)S.customPool=[];
+if(!S.gp)S.gp=0;
+if(!S.spentGp)S.spentGp=0;
+if(!S.shop)S.shop=[];
+if(!S.archivedShop)S.archivedShop=[];
+if(!S.config)S.config={sets:3,reps:10,coreSets:2,coreReps:10,cardioDur:25};
+if(!S.customCardio)S.customCardio=[];
+if(!S.condition)S.condition={};
+if(S.targetWeight===undefined)S.targetWeight=null;
+if(S.strChoice===undefined)S.strChoice=null;
+// Migrate old str/sta to gp
+if(S.str||S.sta){S.gp=(S.str||0)*GP_STR+(S.sta||0)*GP_STA;delete S.str;delete S.sta;S.spentGp=(S.spentStr||0)*GP_STR+(S.spentSta||0)*GP_STA;delete S.spentStr;delete S.spentSta;}
+// Migrate old shop items
+S.shop.forEach(function(item){
+if(item.strCost!==undefined&&item.gpCost===undefined){
+item.gpCost=item.strCost*GP_STR+item.staCost*GP_STA;
+item.gpInvested=(item.strInvested||0)*GP_STR+(item.staInvested||0)*GP_STA;
+delete item.strCost;delete item.staCost;delete item.strInvested;delete item.staInvested;
+}
+});
+if(S.reward&&S.reward.img&&S.shop.length===0){
+S.shop.push({id:Date.now(),name:S.reward.name||'보상',img:S.reward.img,price:S.reward.price||'',gpCost:200,gpInvested:0,unlocked:false});
+delete S.reward;
+}
+if(!S.reward)S.reward={};
+
+var curTab=0;
+var calYear,calMonth;
+(function(){var d=new Date();calYear=d.getFullYear();calMonth=d.getMonth()})();
+var calSelected=null;
+function save(){localStorage.setItem('wk_idol',JSON.stringify(S))}
+function todayKey(){var d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()}
+function getCondition(){var k=todayKey();if(!S.condition[k])S.condition[k]={sleep:null,water:0,mood:null};return S.condition[k]}
+function saveCondition(field,val){var c=getCondition();c[field]=val;save();render()}
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2400)}
+function curRoutine(){return getRoutineForCycle(S.idx)}
+function curMonthKey(){var d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)}
+function getSwapsUsed(){return S.swaps[curMonthKey()]||0}
+function getAvailGp(){return S.gp-S.spentGp}
+function getStreak(){
+var days={};S.history.forEach(function(h){days[h.year+'-'+h.month+'-'+h.day]=true});
+var d=new Date();var tk=d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate();
+if(!days[tk])d.setDate(d.getDate()-1);
+var s=0;for(var i=0;i<365;i++){if(days[d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate()]){s++;d.setDate(d.getDate()-1);}else break;}
+return s;
+}
+
+function switchTab(n){curTab=n;document.querySelectorAll('.tab').forEach(function(t,i){t.classList.toggle('active',i===n)});render()}
+function render(){
+if(curTab===0)renderWorkout();
+else if(curTab===1)renderShop();
+else if(curTab===2)renderCalendar();
+else renderWeight();
+}
+
+// === DP BAR ===
+function renderGpBar(){
+var h='<div class="gp-bar">';
+h+='<div class="gp-coin">💎</div>';
+h+='<div class="gp-info"><div class="gp-label">DEBUT POINT</div>';
+h+='<div class="gp-val">'+getAvailGp()+' <span style="font-size:14px;color:#C8A870">DP</span></div>';
+h+='<div class="gp-avail">총 '+S.gp+' DP 획득</div>';
+h+='</div>';
+h+='<div class="gp-streak"><div class="gp-streak-num">'+getStreak()+'</div><div class="gp-streak-label">🔥 연속 연습</div></div>';
+h+='</div>';
+return h;
+}
+
+// === CONDITION CARD ===
+function renderConditionCard(){
+var c=getCondition();
+var lw=S.weights.length?S.weights[S.weights.length-1].kg:null;
+var tw=S.targetWeight;
+var diff=lw&&tw?(lw-tw).toFixed(1):null;
+var h='<div class="cond-card">';
+h+='<div style="display:flex;align-items:flex-end;justify-content:center;gap:6px">';
+h+='<div class="cond-num">'+(lw?lw:'-')+'</div><div style="font-size:16px;color:var(--tm);padding-bottom:8px">kg</div>';
+h+='</div>';
+if(tw){
+  h+='<div style="text-align:center;font-size:13px;color:var(--tm);margin-top:-2px">목표 '+tw+'kg'+(diff!==null?' · 남은 '+diff+'kg':'')+'</div>';
+} else {
+  h+='<div style="text-align:center;font-size:12px;color:var(--th);margin-top:-2px">프로필에서 목표 체중을 설정해보세요</div>';
+}
+h+='<div class="cond-sub-grid">';
+// sleep
+h+='<div><div style="font-size:11px;color:var(--tm);margin-bottom:4px">🌙 수면시간</div>';
+h+='<input type="number" step="0.5" min="0" max="24" value="'+(c.sleep!==null?c.sleep:'')+'" placeholder="시간" onchange="saveCondition(\'sleep\',parseFloat(this.value)||null)" style="width:100%;padding:6px;border:2px solid var(--border);border-radius:6px;background:var(--card);color:var(--tx);font-family:inherit;text-align:center"></div>';
+// water
+h+='<div><div style="font-size:11px;color:var(--tm);margin-bottom:4px">💧 물 마심 ('+c.water+'/8)</div>';
+h+='<div class="water-dots">';
+for(var w=1;w<=8;w++){h+='<span class="water-dot'+(w<=c.water?' filled':'')+'" onclick="saveCondition(\'water\','+(c.water===w?w-1:w)+')"></span>';}
+h+='</div></div>';
+h+='</div>';
+// mood
+h+='<div style="font-size:11px;color:var(--tm);margin:8px 0 4px;text-align:center">오늘의 기분</div>';
+h+='<div class="cond-mood-row">';
+['😊','🙂','😐','😔','😣'].forEach(function(m){h+='<span class="mood-emoji'+(c.mood===m?' selected':'')+'" onclick="saveCondition(\'mood\',\''+m+'\')">'+m+'</span>';});
+h+='</div>';
+h+='</div>';
+return h;
+}
+
+// === WEEKLY EVALUATION ===
+function getWeeklyGrade(){
+var now=new Date();var weekStart=new Date(now);weekStart.setDate(now.getDate()-now.getDay());weekStart.setHours(0,0,0,0);
+var workoutDays={};
+S.history.forEach(function(h){var d=new Date(h.year,h.month,h.day);if(d>=weekStart&&d<=now)workoutDays[h.year+'-'+h.month+'-'+h.day]=true;});
+var workoutCount=Object.keys(workoutDays).length;
+var daysSoFar=now.getDay()+1;
+var workoutScore=Math.min(40,Math.round(workoutCount/Math.max(1,daysSoFar)*40));
+// condition avg
+var sleepSum=0,sleepN=0,waterSum=0,waterN=0,moodSum=0,moodN=0;
+var moodMap={'😊':5,'🙂':4,'😐':3,'😔':2,'😣':1};
+for(var i=0;i<daysSoFar;i++){
+  var d=new Date(weekStart);d.setDate(weekStart.getDate()+i);
+  var k=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+  var c=S.condition[k];if(!c)continue;
+  if(c.sleep!=null){sleepSum+=c.sleep;sleepN++;}
+  if(c.water){waterSum+=c.water;waterN++;}
+  if(c.mood&&moodMap[c.mood]){moodSum+=moodMap[c.mood];moodN++;}
+}
+var sleepScore=sleepN?Math.min(20,Math.round((sleepSum/sleepN)/8*20)):0;
+var waterScore=waterN?Math.min(15,Math.round((waterSum/waterN)/8*15)):0;
+var moodScore=moodN?Math.min(10,Math.round((moodSum/moodN)/5*10)):0;
+// weight trend
+var weightScore=0;var reasons=[];
+if(S.targetWeight&&S.weights.length>=2){
+  var first=S.weights[0].kg;var last=S.weights[S.weights.length-1].kg;
+  var towardTarget=(first>S.targetWeight&&last<first)||(first<S.targetWeight&&last>first)||Math.abs(last-S.targetWeight)<0.5;
+  weightScore=towardTarget?15:5;
+}
+var score=workoutScore+sleepScore+waterScore+moodScore+weightScore;
+var grade='D';
+if(score>=85)grade='S';else if(score>=70)grade='A';else if(score>=55)grade='B';else if(score>=40)grade='C';
+reasons.push('연습 '+workoutCount+'일');
+if(sleepN)reasons.push('평균 수면 '+(sleepSum/sleepN).toFixed(1)+'h');
+if(waterN)reasons.push('평균 물 '+(waterSum/waterN).toFixed(1)+'잔');
+return {grade:grade,score:score,reasons:reasons};
+}
+
+// === WORKOUT TAB ===
+function renderWorkout(){
+var r=curRoutine();
+var h='<div class="header"><h1 class="hand">📔 연습생 다이어리</h1>';
+h+='</div>';
+h+=renderConditionCard();
+// Practice Board
+h+='<div class="guild-board"><div class="board-slots">';
+var ci=S.idx%5;
+for(var gi=0;gi<5;gi++){
+var rt=getRoutineForCycle(S.idx-ci+gi);
+var cls=gi===ci?'now':(gi<ci?'done-step':'');
+var gp=rt.type==='cardio'?GP_STA:GP_STR;
+h+='<div class="board-slot '+cls+'">'+rt.icon+' '+rt.name+' — '+gp+' DP</div>';
+}
+h+='</div></div>';
+var guildMsgs=['꾸준함이 재능이야','오늘도 반짝이는 너','거울 앞의 너를 믿어','한 뼘씩 성장 중','컨디션도 실력이야','내일의 무대를 위해','작은 연습이 큰 무대가 돼','너의 페이스대로','포기하지 않는 마음이 스타를 만들어','오늘도 애썼어, 연습생','프로듀서님이 지켜보고 계셔','데뷔까지 한 걸음 더'];
+h+='<div class="hand" style="text-align:center;margin:-4px 0 10px;font-size:18px;color:var(--tm);letter-spacing:1px">💬 매니저: '+guildMsgs[Math.floor(Math.random()*guildMsgs.length)]+'</div>';
+// DP + 위시리스트 합친 카드
+h+='<div class="gp-bar">';
+h+='<div style="display:flex;align-items:center;gap:6px">';
+h+='<div class="gp-coin">💎</div>';
+h+='<div class="gp-val">'+getAvailGp()+' <span style="font-size:12px;color:var(--th)">데뷔 포인트 (DP)</span></div>';
+h+='<span style="font-size:9px;color:var(--th)">(총 '+S.gp+')</span>';
+h+='</div>';
+h+='<div class="gp-streak"><div class="gp-streak-num">'+getStreak()+'</div><div class="gp-streak-label">🔥 연속 연습</div></div>';
+var exchangeable=S.shop.filter(function(it){return it.gpInvested<it.gpCost});
+if(exchangeable.length>0){
+h+='<div style="width:100%;border-top:1px solid rgba(200,168,112,.3);margin-top:8px;padding-top:8px">';
+h+='<div style="font-size:13px;color:var(--gold2);margin-bottom:6px;letter-spacing:1px;text-align:center">💫 위시리스트</div>';
+exchangeable.forEach(function(item){
+var pct=Math.min(100,Math.round(item.gpInvested/Math.max(1,item.gpCost)*100));
+var remaining=Math.max(0,item.gpCost-item.gpInvested);
+h+='<div class="mini-item">';
+h+='<img class="mini-item-img locked" src="'+item.img+'" draggable="false">';
+h+='<div class="mini-item-info"><div class="mini-item-name">'+item.name+'</div>';
+h+='<div class="mini-prog"><div class="mini-prog-fill" style="width:'+pct+'%"></div></div>';
+h+='</div>';
+h+='<div class="mini-item-gp">'+item.gpInvested+'/'+item.gpCost+'<div style="font-size:9px;color:#C8A870;margin-top:1px">남은 '+remaining+' DP</div></div>';
+h+='</div>';
+});
+h+='</div>';
+}
+h+='</div>';
+// Exercises
+if(r.type==='cardio'){
+var picked=S.cardioChoice;
+h+='<div class="walk-card">';
+var allCardio=getAllCardio();
+if(picked===undefined||picked===null){
+h+='<h2>💃 무대 체력 훈련 선택</h2><p>오늘 할 연습을 골라보세요</p>';
+h+='<div style="display:flex;flex-direction:column;gap:6px;margin:8px 0">';
+allCardio.forEach(function(c,i){
+h+='<button class="btn-ghost" style="text-align:left;padding:10px" onclick="pickCardio('+i+')">';
+h+='<strong>'+c.icon+' '+c.name+'</strong> <span style="color:var(--th);font-size:11px">'+c.dur+'</span><br>';
+h+='<span style="font-size:10px;color:var(--tm)">'+c.desc+'</span></button>';
+});
+h+='<button class="btn-skip" onclick="showAddCardioModal()" style="margin-top:2px">➕ 훈련 추가</button>';
+h+='</div>';
+} else {
+var cc=allCardio[picked];
+h+='<h2>'+cc.icon+' '+cc.name+'</h2><p>'+cc.dur+' · '+cc.desc+'</p>';
+h+='<div style="font-size:13px;color:var(--gold2);font-weight:700;margin:8px 0">💎 보상: '+GP_STA+' DP</div>';
+h+='<button class="btn-gold" onclick="completeCardio('+picked+')">연습 완료! +'+GP_STA+' DP</button>';
+h+='<button class="btn-ghost" style="margin-top:6px" onclick="pickCardio(null)">다른 연습 선택</button>';
+}
+if(S.idx>0) h+='<button class="btn-skip" onclick="goBack()" style="margin-top:4px">↩ 되돌리기</button>';
+h+='</div>';
+} else if(S.strChoice===null){
+// 퍼포먼스 타입 선택
+h+='<div class="walk-card">';
+h+='<h2>✨ 퍼포먼스 연습 선택</h2><p>오늘의 연습 방식을 골라보세요</p>';
+h+='<div style="display:flex;flex-direction:column;gap:6px;margin:8px 0">';
+h+='<button class="btn-ghost" style="text-align:left;padding:12px" onclick="pickStrType(\'crossfit\')">';
+h+='<strong>🏋️ 그룹 클래스</strong><br>';
+h+='<span style="font-size:10px;color:var(--tm)">수업 완료 후 한 번에 기록</span></button>';
+h+='<button class="btn-ghost" style="text-align:left;padding:12px" onclick="pickStrType(\'gym\')">';
+h+='<strong>💪 개별 트레이닝</strong><br>';
+h+='<span style="font-size:10px;color:var(--tm)">운동 세트를 하나씩 체크</span></button>';
+h+='</div>';
+if(S.idx>0) h+='<button class="btn-skip" onclick="goBack()" style="margin-top:4px">↩ 되돌리기</button>';
+h+='</div>';
+} else if(S.strChoice==='crossfit'){
+// 크로스핏 — 한번에 완료
+h+='<div class="walk-card">';
+h+='<h2>🏋️ 그룹 클래스</h2>';
+h+='<p>'+r.icon+' '+r.name+'</p>';
+h+='<div style="font-size:13px;color:var(--gold2);font-weight:700;margin:8px 0">💎 보상: '+GP_STR+' DP</div>';
+h+='<button class="btn-gold" onclick="completeCrossfit()">수업 완료! +'+GP_STR+' DP</button>';
+h+='<button class="btn-ghost" style="margin-top:6px" onclick="pickStrType(null)">다른 방식 선택</button>';
+if(S.idx>0) h+='<button class="btn-skip" onclick="goBack()" style="margin-top:4px">↩ 되돌리기</button>';
+h+='</div>';
+} else {
+// 짐 워크아웃 — 기존 세트별 수행
+var totalSets=0,doneSets=0;
+r.exercises.forEach(function(ex,i){for(var s=0;s<ex.sets;s++){totalSets++;if(S.sets[i+'_'+s])doneSets++;}});
+var pct=totalSets?Math.round(doneSets/totalSets*100):0;
+var allDone=doneSets===totalSets;
+h+='<div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%"></div></div>';
+h+='<div class="progress-text">연습 진행 중 — '+doneSets+'/'+totalSets+' 세트</div>';
+if(!allDone){
+h+='<div class="quest-board">';
+h+='<div class="quest-board-title">📋 오늘의 연습 <span style="font-size:10px;color:var(--th);font-weight:500">🔄 변경 '+getSwapsUsed()+'/'+SWAP_MAX+'</span></div>';
+h+='<div class="ex-list">';
+r.exercises.forEach(function(ex,i){
+var exDone=true;for(var s=0;s<ex.sets;s++){if(!S.sets[i+'_'+s]){exDone=false;break;}}
+h+='<div class="ex-card'+(exDone?' done':'')+'">';
+var swapsLeft=SWAP_MAX-getSwapsUsed();
+h+='<div class="ex-name" style="display:flex;justify-content:space-between;align-items:center">'+ex.name;
+if(!exDone&&swapsLeft>0) h+='<button onclick="showSwapConfirm('+i+')" style="font-size:9px;padding:2px 6px;border:1.5px dashed var(--border);border-radius:4px;background:var(--sf);color:var(--th);cursor:pointer;font-family:inherit">🔄</button>';
+h+='</div>';
+h+='<div class="ex-desc">'+ex.sets+'세트 × '+ex.reps+(typeof ex.reps==='number'?'회':'')+'</div>';
+h+='<div class="ex-sets">';
+for(var s=0;s<ex.sets;s++){var done=S.sets[i+'_'+s];h+='<button class="set-btn'+(done?' done':'')+'" onclick="togSet('+i+','+s+')">'+(done?'✓':(s+1))+'</button>';}
+h+='</div>';
+if(ex.how){h+='<button class="how-btn" onclick="togHow(this)">방법 보기 →</button><div class="how-text">'+ex.how+'</div>';}
+if(!exDone&&restTimer&&restEi===i){
+h+='<div class="rest-timer" id="rest-'+i+'-'+restSi+'"><span style="font-size:10px;color:#fff;font-weight:600">⏳ 휴식</span>';
+h+='<div class="rest-timer-bar"><div class="rest-timer-fill"></div></div><div class="rest-timer-text">60s</div></div>';
+}
+h+='</div>';
+});
+h+='</div></div>';
+// extras
+if(S.extras.length>0){
+h+='<div style="margin:6px 0"><div style="font-size:12px;color:var(--tm);font-weight:700;margin-bottom:4px">💪 추가 연습</div>';
+h+='<div class="ex-list">';
+S.extras.forEach(function(ex,i){
+var ed=true;for(var s=0;s<ex.sets;s++){if(!S.sets['ex_'+i+'_'+s]){ed=false;break;}}
+h+='<div class="ex-card'+(ed?' done':'')+'"><div class="ex-name">'+ex.name+'</div>';
+h+='<div class="ex-desc">'+ex.sets+'세트 × '+ex.reps+(typeof ex.reps==='number'?'회':'')+'</div>';
+h+='<div class="ex-sets">';
+for(var s=0;s<ex.sets;s++){var d=S.sets['ex_'+i+'_'+s];h+='<button class="set-btn'+(d?' done':'')+'" onclick="togExtraSet('+i+','+s+')">'+(d?'✓':(s+1))+'</button>';}
+h+='</div></div>';
+});
+h+='</div></div>';
+}
+h+='<button class="btn-ghost" style="margin-top:6px;font-size:12px" onclick="showAddExtraModal()">💪 연습 추가하기</button>';
+if(S.idx>0) h+='<button class="btn-skip" onclick="goBack()" style="margin-top:4px">↩ 되돌리기</button>';
+} else {
+var next=getRoutineForCycle(S.idx+1);
+h+='<div class="done-card"><h2>✨ 오늘 연습 완료!</h2>';
+h+='<p>다음: <strong>'+next.icon+' '+next.name+'</strong></p>';
+h+='<div class="done-btns">';
+h+='<button class="btn-gold" onclick="nextRoutine(true)">다음 연습 →</button>';
+h+='<button class="btn-skip" onclick="goBack()">↩ 되돌리기</button>';
+h+='</div></div>';
+}
+}
+document.getElementById('app').innerHTML=h;
+setTimeout(restoreRestUI,50);
+}
+
+// === STYLING ROOM TAB ===
+function renderShop(){
+var h='<div class="header"><h1 class="hand">💫 스타일링 룸</h1>';
+h+='<div class="header-sub">DP로 위시리스트를 채워보세요</div></div>';
+h+=renderGpBar();
+if(S.shop.length===0){
+h+='<div style="text-align:center;padding:36px 16px;color:var(--th)">';
+h+='<div style="font-size:44px;margin-bottom:10px;animation:floaty 2.5s ease-in-out infinite">💫</div>';
+h+='<p style="font-size:13px;color:var(--tm);margin-bottom:4px">아직 위시리스트가 비어있어요</p>';
+h+='<p style="font-size:11px">데뷔 후 입고 싶은 옷, 사고 싶은 아이템을<br>기록해보세요 💫</p></div>';
+} else {
+// Claimable items
+var claimable=S.shop.filter(function(it){return it.gpInvested>=it.gpCost&&it.unlocked});
+var inProgress=S.shop.filter(function(it){return it.gpInvested<it.gpCost||!it.unlocked});
+if(claimable.length>0){
+h+='<div class="shop-section"><div class="shop-section-title">💖 획득 완료</div>';
+claimable.forEach(function(item,i){
+var idx=S.shop.indexOf(item);
+h+='<div class="shop-item unlocked">';
+h+='<div class="shop-item-top">';
+h+='<img class="shop-item-img" src="'+item.img+'" draggable="false">';
+h+='<div class="shop-item-info"><div class="shop-item-name">✨ '+item.name+'</div>';
+if(item.price)h+='<div class="shop-item-price">💎 '+item.price+'</div>';
+h+='</div>';
+h+='<button onclick="editShopItem('+idx+')" style="background:none;border:none;color:var(--th);cursor:pointer;font-size:11px;padding:4px">✏️</button>';
+h+='<button onclick="archiveShopItem('+idx+')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:11px;padding:4px">🗑️</button>';
+h+='</div>';
+h+='<div style="text-align:center;margin-top:6px"><span class="shop-unlocked-badge">💖 획득 완료!</span></div>';
+h+='</div>';
+});
+h+='</div>';
+}
+if(inProgress.length>0){
+h+='<div class="shop-section"><div class="shop-section-title">💫 위시리스트</div>';
+inProgress.forEach(function(item){
+var idx=S.shop.indexOf(item);
+var unlocked=item.gpInvested>=item.gpCost;
+if(unlocked&&!item.unlocked){item.unlocked=true;save();}
+var pct=Math.min(100,Math.round(item.gpInvested/Math.max(1,item.gpCost)*100));
+var canExchange=getAvailGp()>0&&item.gpInvested<item.gpCost;
+var remaining=item.gpCost-item.gpInvested;
+h+='<div class="shop-item">';
+h+='<div class="shop-item-top">';
+h+='<img class="shop-item-img locked" src="'+item.img+'" draggable="false">';
+h+='<div class="shop-item-info"><div class="shop-item-name">'+item.name+'</div>';
+if(item.price) h+='<div class="shop-item-price">💎 '+item.price+'</div>';
+h+='<div class="shop-item-cost">💎 '+item.gpCost+' DP 필요</div>';
+h+='</div>';
+h+='<button onclick="editShopItem('+idx+')" style="background:none;border:none;color:var(--th);cursor:pointer;font-size:11px;padding:4px">✏️</button>';
+h+='</div>';
+h+='<div class="shop-prog"><div class="shop-prog-bar"><div class="shop-prog-fill" style="width:'+pct+'%"></div></div>';
+h+='<div class="shop-prog-info"><span>'+item.gpInvested+' / '+item.gpCost+' DP</span><span>남은 '+remaining+' DP</span></div></div>';
+// Exchange buttons
+h+='<div style="display:flex;gap:6px;margin-top:6px">';
+var amounts=[1,5,10];
+amounts.forEach(function(a){
+var canA=getAvailGp()>=a&&item.gpInvested+a<=item.gpCost;
+var actualA=Math.min(a,item.gpCost-item.gpInvested,getAvailGp());
+h+='<button class="shop-exchange-btn" style="flex:1;font-size:11px;padding:6px" onclick="investGp('+idx+','+actualA+')"'+(canA||actualA>0?'':' disabled')+'>+'+a+' DP</button>';
+});
+// All-in button
+var allIn=Math.min(getAvailGp(),remaining);
+if(allIn>10) h+='<button class="shop-exchange-btn" style="flex:1;font-size:11px;padding:6px" onclick="investGp('+idx+','+allIn+')"'+(allIn>0?'':' disabled')+'>전부</button>';
+h+='</div>';
+h+='</div>';
+});
+h+='</div>';
+}
+}
+h+='<button class="shop-add-btn" onclick="showAddItemModal()">+ 위시리스트에 추가</button>';
+h+='<div style="margin-top:12px;padding:10px;background:var(--sf);border:2px solid var(--border);border-radius:var(--r);font-size:11px;color:var(--th);text-align:center;box-shadow:var(--shadow)">';
+h+='💡 퍼포먼스 연습 → 💎 '+GP_STR+' DP &nbsp;|&nbsp; 무대 체력 훈련 → 💎 '+GP_STA+' DP</div>';
+// 획득 완료 아카이브
+var archived=(S.archivedShop||[]);
+if(archived.length>0){
+h+='<div style="margin:12px 0;padding:12px;background:var(--card);border:3px solid var(--border);border-radius:0;box-shadow:var(--shadow)">';
+h+='<div class="hand" style="font-size:18px;color:var(--gold2);margin-bottom:8px;text-align:center;letter-spacing:2px">💖 획득 완료 아이템</div>';
+h+='<div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">';
+archived.forEach(function(item){
+h+='<div style="text-align:center;width:80px">';
+h+='<div style="position:relative;display:inline-block">';
+h+='<img src="'+item.img+'" style="width:70px;height:70px;object-fit:cover;border:2px solid var(--border);border-radius:0;filter:grayscale(40%);opacity:.8" draggable="false">';
+h+='<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-15deg);background:rgba(192,57,43,.85);color:#fff;font-size:11px;font-weight:bold;padding:2px 8px;border:2px solid #a93226;border-radius:0;font-family:\'DotGothic16\',monospace;white-space:nowrap;letter-spacing:2px">품절</div>';
+h+='</div>';
+h+='<div style="font-size:11px;color:var(--tx);margin-top:4px">'+item.name+'</div>';
+h+='</div>';
+});
+h+='</div></div>';
+}
+document.getElementById('app').innerHTML=h;
+}
+
+function archiveShopItem(idx){
+var item=S.shop[idx];
+if(!item||!item.unlocked)return;
+if(!confirm(item.name+' 을(를) 아카이브로 이동할까요?'))return;
+if(!S.archivedShop)S.archivedShop=[];
+S.archivedShop.push({name:item.name,img:item.img,price:item.price,gpCost:item.gpCost});
+S.shop.splice(idx,1);save();render();
+toast('📦 '+item.name+' 아카이브 완료!');
+}
+function investGp(idx,amount){
+var item=S.shop[idx];
+var actual=Math.min(amount,getAvailGp(),item.gpCost-item.gpInvested);
+if(actual<=0)return;
+item.gpInvested+=actual;S.spentGp+=actual;save();
+if(item.gpInvested>=item.gpCost&&!item.unlocked){
+item.unlocked=true;save();
+showConfetti();showConfetti(true);
+toast('🎉 '+item.name+' 획득!');
+} else {
+toast('💎 '+actual+' DP 적립!');
+}
+render();
+}
+
+function showAddItemModal(){
+var h='<div class="modal-bg" onclick="if(event.target===this)closeModal()">';
+h+='<div class="modal-box" style="max-height:80vh;overflow-y:auto">';
+h+='<h3>💫 위시리스트 추가</h3>';
+h+='<p>갖고 싶은 아이템을 등록해보세요!<br>필요 DP를 설정할 수 있어요.</p>';
+h+='<div class="price-row"><span>🏷️</span><input type="text" id="itemName" placeholder="아이템 이름"></div>';
+h+='<div class="price-row"><span>💎</span><input type="text" id="itemPrice" placeholder="가격 (선택)"></div>';
+h+='<div class="cost-input-row"><label>💎 필요 DP</label><input type="number" id="itemGpCost" value="100" min="1"></div>';
+h+='<div style="margin-top:12px"><button class="btn-gold" onclick="triggerItemUpload()">📸 사진 선택 & 등록</button></div>';
+h+='<input type="file" id="itemFileInput" accept="image/*" style="display:none" onchange="startItemCrop(this)">';
+h+='<button class="btn-skip" style="margin-top:6px" onclick="closeModal()">취소</button>';
+h+='</div></div>';
+document.getElementById('modal').innerHTML=h;
+}
+function triggerItemUpload(){
+var name=document.getElementById('itemName').value.trim();
+if(!name){toast('아이템 이름을 입력해주세요!');return;}
+window._tempItem={name:name,price:document.getElementById('itemPrice').value.trim(),gpCost:parseInt(document.getElementById('itemGpCost').value)||100};
+document.getElementById('itemFileInput').click();
+}
+function startItemCrop(input){
+var file=input.files[0];if(!file)return;closeModal();
+var reader=new FileReader();
+reader.onload=function(e){showCropModal(e.target.result,'addItem')};
+reader.readAsDataURL(file);
+}
+function editShopItem(idx){
+var item=S.shop[idx];
+var h='<div class="modal-bg" onclick="if(event.target===this)closeModal()">';
+h+='<div class="modal-box">';
+h+='<h3>✏️ '+item.name+'</h3>';
+h+='<div class="price-row"><span>🏷️</span><input type="text" id="editName" value="'+item.name+'"></div>';
+h+='<div class="price-row"><span>💰</span><input type="text" id="editPrice" value="'+(item.price||'')+'"></div>';
+if(!item.unlocked) h+='<div class="cost-input-row"><label>💎 필요 DP</label><input type="number" id="editGpCost" value="'+item.gpCost+'" min="1"></div>';
+h+='<div style="margin-top:12px;display:flex;flex-direction:column;gap:6px">';
+h+='<button class="btn-gold" onclick="saveEditItem('+idx+')">저장</button>';
+h+='<button class="btn-ghost" style="color:var(--red)" onclick="deleteShopItem('+idx+')">🗑️ 삭제</button>';
+h+='<button class="btn-skip" onclick="closeModal()">취소</button>';
+h+='</div></div></div>';
+document.getElementById('modal').innerHTML=h;
+}
+function saveEditItem(idx){
+var item=S.shop[idx];
+item.name=document.getElementById('editName').value.trim()||item.name;
+item.price=document.getElementById('editPrice').value.trim();
+if(!item.unlocked){
+var newGp=parseInt(document.getElementById('editGpCost').value);
+if(!isNaN(newGp)&&newGp>0){
+if(newGp<item.gpInvested){S.spentGp-=(item.gpInvested-newGp);item.gpInvested=newGp;}
+item.gpCost=newGp;
+}
+}
+save();closeModal();render();toast('수정 완료!');
+}
+function deleteShopItem(idx){
+if(!confirm('정말 삭제할까요?'))return;
+var item=S.shop[idx];S.spentGp-=item.gpInvested;
+S.shop.splice(idx,1);save();closeModal();render();toast('삭제 완료!');
+}
+
+// === CALENDAR ===
+function renderCalendar(){
+var h='<div class="header"><h1 class="hand">📓 연습 일지</h1></div>';
+// 이번 주 평가
+var ev=getWeeklyGrade();
+h+='<div class="eval-card"><div style="font-size:12px;color:var(--tm);letter-spacing:1px">이번 주 평가</div>';
+h+='<div class="eval-grade '+ev.grade.toLowerCase()+'">'+ev.grade+'</div>';
+h+='<div style="font-size:12px;color:var(--th)">'+ev.score+'점 · '+ev.reasons.join(' · ')+'</div></div>';
+// 누적 기록
+h+='<div style="margin:10px 0;padding:12px;background:var(--card);border:3px solid var(--border);border-radius:0;box-shadow:var(--shadow)">';
+h+='<div class="hand" style="font-size:18px;color:var(--gold2);margin-bottom:6px;text-align:center;letter-spacing:2px">📊 누적 기록</div>';
+h+='<div style="display:flex;justify-content:space-around;font-size:12px">';
+h+='<div style="text-align:center"><div style="color:var(--gold2);font-size:18px">'+S.gp+'</div><div style="color:var(--th);font-size:10px">총 DP</div></div>';
+h+='<div style="text-align:center"><div style="color:var(--gold2);font-size:18px">'+S.history.length+'</div><div style="color:var(--th);font-size:10px">총 연습</div></div>';
+h+='<div style="text-align:center"><div style="color:var(--gold2);font-size:18px">'+(S.shop.filter(function(i){return i.unlocked}).length+(S.archivedShop||[]).length)+'/'+(S.shop.length+(S.archivedShop||[]).length)+'</div><div style="color:var(--th);font-size:10px">획득</div></div>';
+h+='</div></div>';
+// 몸무게 기록
+var lw=S.weights.length?S.weights[S.weights.length-1]:null;
+h+='<div class="wt-current"><div class="wt-num">'+(lw?lw.kg:'-')+'</div><div class="wt-unit">kg</div></div>';
+h+='<div class="wt-input-row"><input type="number" id="wti" placeholder="몸무게 입력" step="0.1"><button onclick="saveWt()">저장</button></div>';
+if(S.weights.length>=2) h+='<div class="wt-chart"><canvas id="wtCanvas" width="400" height="200"></canvas></div>';
+// 캘린더
+h+='<div class="cal-month"><button class="cal-nav" onclick="calPrev()">‹</button>';
+h+='<span>'+(calYear)+'년 '+(calMonth+1)+'월</span>';
+h+='<button class="cal-nav" onclick="calNext()">›</button></div>';
+var days=['일','월','화','수','목','금','토'];
+h+='<div class="cal-grid">';
+days.forEach(function(d){h+='<div class="cal-day-header">'+d+'</div>'});
+var first=new Date(calYear,calMonth,1).getDay();
+var last=new Date(calYear,calMonth+1,0).getDate();
+var today=new Date();
+var records={};
+S.history.forEach(function(item){if(item.year===calYear&&item.month===calMonth){if(!records[item.day])records[item.day]=[];records[item.day].push(item);}});
+var wtByDay={};
+S.weights.forEach(function(w){var parts=w.date.split('.');if(parseInt(parts[0])===calYear&&parseInt(parts[1])===(calMonth+1))wtByDay[parseInt(parts[2])]=w.kg;});
+for(var i=0;i<first;i++)h+='<div class="cal-day"></div>';
+for(var d=1;d<=last;d++){
+var isToday=calYear===today.getFullYear()&&calMonth===today.getMonth()&&d===today.getDate();
+var has=records[d];var sel=calSelected===d;var wt=wtByDay[d];
+h+='<div class="cal-day'+(isToday?' today':'')+(has?' has-record':'')+(sel?' selected':'')+'" onclick="selectDay('+d+')">'+d+(wt?'<div style="font-size:8px;color:var(--gold2);line-height:1;margin-top:1px">'+wt+'</div>':'')+'</div>';
+}
+h+='</div>';
+if(calSelected&&(records[calSelected]||wtByDay[calSelected])){
+h+='<div class="cal-detail"><div class="cal-detail-title">'+(calMonth+1)+'/'+calSelected+' 기록</div>';
+if(wtByDay[calSelected])h+='<div class="cal-detail-item">⚖️ 몸무게: <b style="color:var(--gold2)">'+wtByDay[calSelected]+' kg</b></div>';
+if(records[calSelected])records[calSelected].forEach(function(item){
+h+='<div class="cal-detail-item">'+item.icon+' '+item.name+(item.gpEarned?' <span style="font-size:10px;color:var(--gold2)">+'+item.gpEarned+' DP</span>':'')+'</div>';
+});
+h+='</div>';
+} else if(calSelected){h+='<div class="cal-detail"><div class="cal-detail-item" style="color:var(--th)">기록 없음</div></div>';}
+var mc=0;S.history.forEach(function(item){if(item.year===calYear&&item.month===calMonth)mc++});
+h+='<div style="text-align:center;margin:12px 0;font-size:12px;color:var(--tm)">이번 달 총 <b style="color:var(--gold2)">'+mc+'회</b> 연습 완료</div>';
+document.getElementById('app').innerHTML=h;
+if(S.weights.length>=2)drawChart();
+}
+function selectDay(d){calSelected=calSelected===d?null:d;renderCalendar()}
+function calPrev(){calMonth--;if(calMonth<0){calMonth=11;calYear--}calSelected=null;renderCalendar()}
+function calNext(){calMonth++;if(calMonth>11){calMonth=0;calYear++}calSelected=null;renderCalendar()}
+
+// === PROFILE TAB ===
+function renderWeight(){
+var c=S.config||{sets:3,reps:10,coreSets:2,coreReps:10};
+var h='<div class="header"><h1 class="hand">🎀 프로필</h1>';
+h+='<div class="header-sub">목표 · 연습 설정 · 데이터</div></div>';
+// 목표 체중
+h+='<div style="margin:12px 0;padding:14px;background:var(--card);border:3px solid var(--border);border-radius:0;box-shadow:var(--shadow)">';
+h+='<div class="hand" style="font-size:18px;color:var(--gold2);margin-bottom:10px;text-align:center;letter-spacing:2px">🎯 목표 체중</div>';
+h+='<div style="display:flex;align-items:center;gap:8px;justify-content:center">';
+h+='<input type="number" step="0.1" id="target-w" value="'+(S.targetWeight||'')+'" placeholder="목표 kg" style="width:120px;border:3px solid var(--border);border-radius:0;padding:8px;font-size:14px;text-align:center;background:var(--card);color:var(--tx);font-family:inherit">';
+h+='<button class="btn-gold" style="padding:8px 14px" onclick="saveTargetWeight()">저장</button>';
+h+='</div></div>';
+// 연습 설정
+h+='<div style="margin:12px 0;padding:14px;background:var(--card);border:3px solid var(--border);border-radius:0;box-shadow:var(--shadow)">';
+h+='<div class="hand" style="font-size:18px;color:var(--gold2);margin-bottom:10px;text-align:center;letter-spacing:2px">✨ 연습 설정</div>';
+h+='<div style="display:flex;flex-direction:column;gap:10px">';
+// 일반 운동
+h+='<div style="font-size:11px;color:var(--tm);margin-bottom:2px">일반 운동 (컴파운드 / 힌지 / 푸시 / 풀)</div>';
+h+='<div style="display:flex;gap:12px;align-items:center">';
+h+='<div style="flex:1;display:flex;align-items:center;gap:6px"><label style="font-size:12px;color:var(--tx);white-space:nowrap">세트</label>';
+h+='<input type="number" id="cfg-sets" value="'+c.sets+'" min="1" max="10" style="flex:1;border:3px solid var(--border);border-radius:0;padding:8px;font-size:14px;text-align:center;background:var(--card);color:var(--tx);font-family:inherit"></div>';
+h+='<div style="flex:1;display:flex;align-items:center;gap:6px"><label style="font-size:12px;color:var(--tx);white-space:nowrap">횟수</label>';
+h+='<input type="number" id="cfg-reps" value="'+c.reps+'" min="1" max="50" style="flex:1;border:3px solid var(--border);border-radius:0;padding:8px;font-size:14px;text-align:center;background:var(--card);color:var(--tx);font-family:inherit"></div>';
+h+='</div>';
+// 코어 운동
+h+='<div style="font-size:11px;color:var(--tm);margin-bottom:2px;margin-top:4px">코어 운동</div>';
+h+='<div style="display:flex;gap:12px;align-items:center">';
+h+='<div style="flex:1;display:flex;align-items:center;gap:6px"><label style="font-size:12px;color:var(--tx);white-space:nowrap">세트</label>';
+h+='<input type="number" id="cfg-core-sets" value="'+c.coreSets+'" min="1" max="10" style="flex:1;border:3px solid var(--border);border-radius:0;padding:8px;font-size:14px;text-align:center;background:var(--card);color:var(--tx);font-family:inherit"></div>';
+h+='<div style="flex:1;display:flex;align-items:center;gap:6px"><label style="font-size:12px;color:var(--tx);white-space:nowrap">횟수</label>';
+h+='<input type="number" id="cfg-core-reps" value="'+c.coreReps+'" min="1" max="50" style="flex:1;border:3px solid var(--border);border-radius:0;padding:8px;font-size:14px;text-align:center;background:var(--card);color:var(--tx);font-family:inherit"></div>';
+h+='</div>';
+// 유산소 설정 (개별 시간)
+h+='<div style="font-size:11px;color:var(--tm);margin-bottom:4px;margin-top:4px">💃 무대 체력 훈련별 시간 (분)</div>';
+var durs=c.cardioDurs||{};
+var allC=CARDIO_OPTIONS.slice();
+(S.customCardio||[]).forEach(function(cc){allC.push({name:cc.name,icon:cc.icon||'🏃',dur:cc.dur||'25분',desc:cc.desc,custom:true})});
+allC.forEach(function(cc,i){
+var defMin=parseInt(cc.dur)||25;
+var curVal=durs[cc.name]||defMin;
+h+='<div style="display:flex;align-items:center;gap:6px;padding:4px 0">';
+h+='<span style="font-size:12px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+cc.icon+' '+cc.name+'</span>';
+h+='<input type="number" data-cardio-name="'+cc.name+'" value="'+curVal+'" min="5" max="120" style="width:60px;border:3px solid var(--border);border-radius:0;padding:6px;font-size:13px;text-align:center;background:var(--card);color:var(--tx);font-family:inherit">';
+h+='<span style="font-size:11px;color:var(--th)">분</span>';
+if(cc.custom){var ci=i-CARDIO_OPTIONS.length;h+='<button onclick="removeCustomCardio('+ci+')" style="background:none;border:2px solid var(--red);border-radius:0;color:var(--red);font-size:10px;padding:2px 6px;cursor:pointer;font-family:inherit">삭제</button>';}
+h+='</div>';
+});
+h+='<button class="btn-gold" onclick="saveConfig()" style="margin-top:8px">💾 저장</button>';
+h+='</div></div>';
+// 데이터 관리
+h+='<div style="margin:14px 0;display:flex;flex-direction:column;gap:6px">';
+h+='<button class="btn-ghost" onclick="exportBackup()">📦 데이터 백업</button>';
+h+='<label class="btn-ghost" style="text-align:center;cursor:pointer">📥 데이터 복원<input type="file" accept=".json" style="display:none" onchange="importBackup(this)"></label>';
+h+='<button class="btn-ghost" style="color:var(--red)" onclick="resetData()">🗑️ 기록 전체 리셋</button>';
+h+='</div>';
+document.getElementById('app').innerHTML=h;
+}
+function saveWt(){
+var v=parseFloat(document.getElementById('wti').value);if(!v||v<1||v>300)return;
+var now=new Date();S.weights.push({kg:v,date:(now.getFullYear())+'.'+(now.getMonth()+1)+'.'+now.getDate()});
+save();renderCalendar();toast(v+'kg 저장!');
+}
+function saveConfig(){
+var s=parseInt(document.getElementById('cfg-sets').value)||3;
+var r=parseInt(document.getElementById('cfg-reps').value)||10;
+var cs=parseInt(document.getElementById('cfg-core-sets').value)||2;
+var cr=parseInt(document.getElementById('cfg-core-reps').value)||10;
+var durs={};
+document.querySelectorAll('[data-cardio-name]').forEach(function(el){
+var name=el.getAttribute('data-cardio-name');
+var v=parseInt(el.value)||25;
+durs[name]=Math.max(5,Math.min(120,v));
+});
+S.config={sets:Math.max(1,Math.min(10,s)),reps:Math.max(1,Math.min(50,r)),coreSets:Math.max(1,Math.min(10,cs)),coreReps:Math.max(1,Math.min(50,cr)),cardioDurs:durs};
+save();render();toast('연습 설정 저장! ✨');
+}
+function saveTargetWeight(){
+var v=parseFloat(document.getElementById('target-w').value);
+S.targetWeight=isNaN(v)?null:v;save();render();toast('목표 체중 저장! 🎯');
+}
+function removeCustomCardio(i){
+var name=S.customCardio[i].name;
+S.customCardio.splice(i,1);
+if(S.config&&S.config.cardioDurs)delete S.config.cardioDurs[name];
+save();render();toast('삭제 완료!');
+}
+function drawChart(){
+var canvas=document.getElementById('wtCanvas');if(!canvas)return;
+var ctx=canvas.getContext('2d');var dpr=window.devicePixelRatio||1;
+canvas.width=canvas.offsetWidth*dpr;canvas.height=200*dpr;ctx.scale(dpr,dpr);
+var W=canvas.offsetWidth,H=200;var data=S.weights.slice(-20);
+var vals=data.map(function(w){return w.kg});
+var minV=Math.min.apply(null,vals);var maxV=Math.max.apply(null,vals);
+var min=Math.floor(minV)-1;var max=Math.ceil(maxV)+1;var range=max-min||1;
+var padL=40,padR=10,padT=15,padB=25;var gw=W-padL-padR,gh=H-padT-padB;
+ctx.strokeStyle='rgba(200,184,154,0.3)';ctx.lineWidth=1;
+var step=1;if(range>10)step=2;if(range>20)step=5;if(range>50)step=10;
+min=Math.floor(minV/step)*step-step;max=Math.ceil(maxV/step)*step+step;range=max-min||1;
+for(var v=min;v<=max;v+=step){var y=padT+(max-v)/range*gh;ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(W-padR,y);ctx.stroke();ctx.fillStyle='#A89880';ctx.font='10px sans-serif';ctx.textAlign='right';ctx.fillText(v,padL-4,y+3);}
+ctx.beginPath();ctx.strokeStyle='#D4A017';ctx.lineWidth=2.5;ctx.lineJoin='round';
+data.forEach(function(w,i){var x=padL+i/(data.length-1)*gw;var y=padT+(max-w.kg)/range*gh;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
+ctx.stroke();
+data.forEach(function(w,i){var x=padL+i/(data.length-1)*gw;var y=padT+(max-w.kg)/range*gh;ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle='#D4A017';ctx.fill();ctx.beginPath();ctx.arc(x,y,2,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();});
+ctx.fillStyle='#A89880';ctx.font='9px sans-serif';ctx.textAlign='center';
+[0,Math.floor(data.length/2),data.length-1].forEach(function(i){if(!data[i])return;var x=padL+i/(data.length-1)*gw;ctx.fillText(data[i].date.split('.').slice(1).join('/'),x,H-5);});
+}
+
+// === WAKE LOCK ===
+var wakeLock=null;
+function requestWake(){if('wakeLock' in navigator)navigator.wakeLock.request('screen').then(function(l){wakeLock=l;l.addEventListener('release',function(){wakeLock=null;});}).catch(function(){});}
+function releaseWake(){if(wakeLock){wakeLock.release();wakeLock=null;}}
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&restTimer)requestWake();});
+
+// === REST TIMER ===
+var restTimer=null;var restEi=-1,restSi=-1;var restStart=0;var REST_SEC=60;
+function startRest(ei,si){clearInterval(restTimer);restEi=ei;restSi=si;restStart=Date.now();requestWake();restTimer=setInterval(function(){var el=Math.floor((Date.now()-restStart)/1000);if(el>=REST_SEC){clearInterval(restTimer);updateRestUI(REST_SEC);restTimer=null;releaseWake();}else updateRestUI(el);},200);}
+function restoreRestUI(){if(!restTimer||restEi<0)return;var el=Math.floor((Date.now()-restStart)/1000);updateRestUI(el>=REST_SEC?REST_SEC:el);}
+function updateRestUI(sec){var el=document.getElementById('rest-'+restEi+'-'+restSi);if(!el)return;var pct=Math.min(100,Math.round(sec/REST_SEC*100));var left=REST_SEC-sec;var bar=el.querySelector('.rest-timer-fill');var txt=el.querySelector('.rest-timer-text');if(bar)bar.style.width=pct+'%';if(txt)txt.textContent=left>0?left+'s':'GO!';if(left<=0)el.classList.add('done-timer');}
+
+// === ACTIONS ===
+function togSet(ei,si){
+var key=ei+'_'+si;var wasDone=S.sets[key];S.sets[key]=!S.sets[key];save();
+if(!wasDone&&S.sets[key]){var r=curRoutine();var ex=r.exercises[ei];var allExDone=true;for(var s=0;s<ex.sets;s++){if(!S.sets[ei+'_'+s]){allExDone=false;break;}}if(!allExDone)startRest(ei,si);else{clearInterval(restTimer);restTimer=null;restEi=-1;}}
+else{clearInterval(restTimer);restTimer=null;restEi=-1;}
+var r=curRoutine();if(r.type==='strength'){var ts=0,ds=0;r.exercises.forEach(function(ex,i){for(var s=0;s<ex.sets;s++){ts++;if(S.sets[i+'_'+s])ds++;}});if(ds===ts&&!wasDone)showCompletePopup(r);}
+render();
+}
+function togHow(btn){var txt=btn.nextElementSibling;if(txt.style.display==='block'){txt.style.display='none';btn.textContent='방법 보기 →';}else{txt.style.display='block';btn.textContent='접기';}}
+function addHistory(r,gpEarned){var now=new Date();S.history.push({name:r.name,icon:r.icon,year:now.getFullYear(),month:now.getMonth(),day:now.getDate(),date:(now.getMonth()+1)+'/'+now.getDate(),gpEarned:gpEarned});}
+function pickCardio(ci){S.cardioChoice=ci;save();render();}
+function pickStrType(type){S.strChoice=type;save();render();}
+var _completeLock=false;
+function completeCrossfit(){
+if(_completeLock)return;_completeLock=true;setTimeout(function(){_completeLock=false},500);
+var r=curRoutine();S.gp+=GP_STR;
+addHistory(r,GP_STR);S.strChoice=null;save();
+showCompletePopupCustom(r.icon+' '+r.name+' (그룹 클래스)',GP_STR);
+}
+function completeCardio(ci){
+if(_completeLock)return;_completeLock=true;setTimeout(function(){_completeLock=false},500);
+var c=getAllCardio()[ci];S.gp+=GP_STA;
+addHistory({name:c.name,icon:c.icon},GP_STA);
+S.cardioChoice=null;save();
+showCompletePopupCustom(c.icon+' '+c.name,GP_STA);render();
+}
+var _nextLock=false;
+function nextRoutine(doNow){if(_nextLock)return;_nextLock=true;setTimeout(function(){_nextLock=false},500);S.idx++;S.sets={};S.cardioChoice=null;S.strChoice=null;S.extras=[];save();if(doNow)toast(curRoutine().icon+' '+curRoutine().name+' 시작!');else toast('다음에 이어할게요!');render();}
+function togExtraSet(ei,si){S.sets['ex_'+ei+'_'+si]=!S.sets['ex_'+ei+'_'+si];save();render();}
+function showAddExtraModal(){
+var cats=[{key:'compound',label:'🏋️ 복합'},{key:'hinge',label:'🍑 힌지'},{key:'pull',label:'💪 당기기'},{key:'push',label:'✊ 밀기'},{key:'core',label:'🔥 코어'}];
+var h='<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal-box" style="max-height:80vh;overflow-y:auto;text-align:left">';
+h+='<h3 style="text-align:center">💪 연습 추가하기</h3>';
+h+='<div style="background:var(--sf);border-radius:6px;padding:10px;margin-top:6px;border:1px solid var(--border)">';
+h+='<div style="font-size:12px;font-weight:700;color:var(--gold2);margin-bottom:6px">✏️ 직접 입력</div>';
+h+='<input type="text" id="customName" placeholder="운동 이름" style="width:100%;padding:7px;border:2px solid var(--border);border-radius:4px;font-size:12px;font-family:inherit;background:var(--card);color:var(--tx);box-sizing:border-box;margin-bottom:4px">';
+h+='<div style="display:flex;gap:4px;align-items:center">';
+h+='<input type="number" id="customSets" value="3" style="width:40px;padding:6px 2px;border:2px solid var(--border);border-radius:4px;font-size:12px;text-align:center;font-family:inherit;background:var(--card);color:var(--tx)">';
+h+='<span style="font-size:11px;color:var(--tm);font-weight:600">세트 ×</span>';
+h+='<input type="text" id="customReps" value="10" style="width:44px;padding:6px 2px;border:2px solid var(--border);border-radius:4px;font-size:12px;text-align:center;font-family:inherit;background:var(--card);color:var(--tx)">';
+h+='<span style="font-size:11px;color:var(--tm);font-weight:600">회/초</span>';
+h+='<button class="btn-gold" style="margin-left:auto;padding:6px 12px;font-size:12px" onclick="addCustomExtra()">추가</button>';
+h+='</div></div>';
+h+='<div style="font-size:10px;color:var(--th);margin-top:8px;text-align:center">— 또는 선택 —</div>';
+if(S.customPool&&S.customPool.length>0){
+h+='<div style="margin-top:6px"><div style="font-size:12px;font-weight:700;color:var(--gold2);margin-bottom:3px">⭐ 내 운동</div>';
+S.customPool.forEach(function(ex){h+='<button class="btn-ghost" style="text-align:left;padding:6px 10px;font-size:12px;margin-bottom:3px" onclick="addExtraByName(\''+ex.name+'\','+ex.sets+',\''+ex.reps+'\')"><strong>'+ex.name+'</strong> <span style="color:var(--th);font-size:10px">'+ex.sets+'×'+ex.reps+'</span></button>';});
+h+='</div>';
+}
+cats.forEach(function(cat){
+h+='<div style="margin-top:6px"><div style="font-size:12px;font-weight:700;color:var(--gold2);margin-bottom:3px">'+cat.label+'</div>';
+POOL[cat.key].forEach(function(ex){h+='<button class="btn-ghost" style="text-align:left;padding:6px 10px;font-size:12px;margin-bottom:3px" onclick="addExtraByName(\''+ex.name+'\','+ex.sets+',\''+ex.reps+'\')"><strong>'+ex.name+'</strong> <span style="color:var(--th);font-size:10px">'+ex.sets+'×'+ex.reps+'</span></button>';});
+h+='</div>';
+});
+h+='</div></div>';
+document.getElementById('modal').innerHTML=h;
+}
+function addCustomExtra(){
+var name=document.getElementById('customName').value.trim();if(!name){toast('이름을 입력해주세요!');return;}
+var sets=parseInt(document.getElementById('customSets').value)||3;
+var reps=document.getElementById('customReps').value.trim()||'10';
+var r=isNaN(Number(reps))?reps:Number(reps);
+S.extras.push({name:name,sets:sets,reps:r});
+if(!S.customPool)S.customPool=[];
+if(!S.customPool.some(function(e){return e.name===name}))S.customPool.push({name:name,sets:sets,reps:r});
+save();closeModal();render();toast(name+' 추가! 💪');
+}
+function addExtraByName(name,sets,reps){S.extras.push({name:name,sets:sets,reps:isNaN(Number(reps))?reps:Number(reps)});save();closeModal();render();toast(name+' 추가! 💪');}
+function showAddCardioModal(){
+var h='<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal-box" style="text-align:left">';
+h+='<h3 style="text-align:center">💃 무대 체력 훈련 추가</h3>';
+h+='<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">';
+h+='<input type="text" id="cardioName" placeholder="운동 이름 (예: 수영)" style="width:100%;padding:8px;border:3px solid var(--border);border-radius:0;font-size:13px;font-family:inherit;background:var(--card);color:var(--tx);box-sizing:border-box">';
+h+='<input type="text" id="cardioDesc" placeholder="설명 (예: 자유형 수영)" style="width:100%;padding:8px;border:3px solid var(--border);border-radius:0;font-size:13px;font-family:inherit;background:var(--card);color:var(--tx);box-sizing:border-box">';
+h+='<div class="modal-btns"><button style="background:var(--sf);color:var(--tx)" onclick="closeModal()">취소</button>';
+h+='<button style="background:var(--gold);color:#2C1810" onclick="addCustomCardio()">추가</button></div>';
+h+='</div></div></div>';
+document.getElementById('modal').innerHTML=h;
+}
+function addCustomCardio(){
+var name=document.getElementById('cardioName').value.trim();
+if(!name){toast('이름을 입력해주세요!');return;}
+var desc=document.getElementById('cardioDesc').value.trim()||'커스텀 유산소';
+var dur=(S.config&&S.config.cardioDur)?S.config.cardioDur+'분':'20-30분';
+if(!S.customCardio)S.customCardio=[];
+if(!S.customCardio.some(function(c){return c.name===name})){
+S.customCardio.push({name:name,icon:'💃',dur:dur,desc:desc});
+save();closeModal();render();toast(name+' 추가! 💃');
+} else {toast('이미 등록된 운동이에요!');closeModal();}
+}
+function goBack(){
+if(S.idx>0){S.idx--;S.sets={};S.cardioChoice=null;S.strChoice=null;
+if(S.history.length>0){var last=S.history[S.history.length-1];var now=new Date();
+if(last.year===now.getFullYear()&&last.month===now.getMonth()&&last.day===now.getDate()){
+if(last.gpEarned)S.gp-=last.gpEarned;S.history.pop();}}
+save();render();toast('되돌렸어요! ↩');}
+}
+
+// === COMPLETE POPUP ===
+function showCompletePopup(routine){S.gp+=GP_STR;addHistory(routine,GP_STR);save();showCompletePopupCustom(routine.icon+' '+routine.name,GP_STR);}
+function showCompletePopupCustom(label,gpGain){
+var streak=getStreak();var pool=gpGain===GP_STR?COMMENTS_STR:COMMENTS_STA;
+var comment=pool[Math.floor(Math.random()*pool.length)];
+var h='<div class="complete-popup" onclick="if(event.target===this)closeCompletePopup()">';
+h+='<div class="complete-box">';
+h+='<div style="font-size:36px;margin-bottom:4px">💎</div>';
+h+='<div class="gp-gain">+'+gpGain+' DP</div>';
+h+='<div class="gp-gain-sub">'+label+' — 오늘의 연습 완료!</div>';
+h+='<div style="margin:8px 0;display:flex;justify-content:center;gap:12px">';
+h+='<div style="text-align:center;padding:6px 12px;background:var(--sf);border-radius:4px;border:1px solid var(--border)"><div style="font-size:16px;font-weight:900;color:var(--gold2)">'+getAvailGp()+'</div><div style="font-size:9px;color:var(--th)">보유 DP</div></div>';
+h+='<div style="text-align:center;padding:6px 12px;background:var(--sf);border-radius:4px;border:1px solid var(--border)"><div style="font-size:16px;font-weight:900;color:#FF8C42">'+streak+'</div><div style="font-size:9px;color:var(--th)">🔥 연속 연습</div></div>';
+h+='</div>';
+h+='<div class="complete-comment">💬 '+comment+'</div>';
+h+='<div class="done-btns" style="margin-top:8px;gap:4px">';
+h+='<button class="btn-gold" style="padding:10px;font-size:13px" onclick="closeCompletePopup();nextRoutine(true)">다음 연습 →</button>';
+h+='<button class="btn-skip" style="padding:6px;font-size:11px" onclick="closeCompletePopup();goBack()">↩ 되돌리기</button>';
+h+='</div></div></div>';
+document.getElementById('modal').innerHTML=h;showConfetti();
+}
+function closeCompletePopup(){closeModal()}
+
+// === SWAP ===
+function showSwapConfirm(exIdx){
+var swaps=getSwapsUsed();var left=SWAP_MAX-swaps;var r=curRoutine();var ex=r.exercises[exIdx];
+var h='<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal-box">';
+if(left<=0){h+='<h3>변경 소진!</h3><p>이번 달 변경 '+SWAP_MAX+'번을 다 썼어요.</p>';
+h+='<div class="modal-btns"><button style="background:var(--gold);color:#2C1810" onclick="closeModal()">알겠어요</button></div>';
+} else {h+='<h3>'+ex.name+' 변경? 🔄</h3><span class="skip-count" style="font-size:24px;font-weight:900;color:var(--gold2);display:block;margin:6px 0;font-family:\'DotGothic16\',sans-serif">남은 변경: '+left+'번</span>';
+h+='<div class="modal-btns"><button style="background:var(--sf);color:var(--tm)" onclick="closeModal()">유지</button><button style="background:var(--gold);color:#2C1810" onclick="doSwap('+exIdx+')">변경!</button></div>';}
+h+='</div></div>';document.getElementById('modal').innerHTML=h;
+}
+function doSwap(exIdx){
+var cats=['compound','hinge',null,'core'];var catName=cats[exIdx];
+if(catName===null) catName=POOL.pull.some(function(e){return e.name===curRoutine().exercises[exIdx].name})?'pull':'push';
+var pool=POOL[catName];var cur=curRoutine().exercises[exIdx].name;
+var others=pool.filter(function(e){return e.name!==cur});
+if(!others.length){closeModal();toast('다른 운동이 없어요!');return;}
+var pick=others[Math.floor(Math.random()*others.length)];
+S.swapped[S.idx+'_'+exIdx]=pick;
+for(var s=0;s<10;s++){delete S.sets[exIdx+'_'+s]}
+var mk=curMonthKey();S.swaps[mk]=(S.swaps[mk]||0)+1;
+save();closeModal();toast('🔄 '+pick.name+'(으)로 변경!');render();
+}
+
+// === CROP ===
+function showCropModal(src,mode){
+var h='<div class="crop-modal"><div class="crop-title">드래그로 위치 조정 ✂️</div>';
+h+='<div class="crop-area" id="cropArea"><img id="cropImg" src="'+src+'"></div>';
+h+='<div class="crop-btns"><button class="crop-cancel" onclick="closeModal()">취소</button><button class="crop-save" onclick="saveCrop(\''+mode+'\')">완료 ✨</button></div></div>';
+document.getElementById('modal').innerHTML=h;
+var img=document.getElementById('cropImg');
+img.onload=function(){
+var area=document.getElementById('cropArea');var aw=area.offsetWidth,ah=area.offsetHeight;
+var iw=img.naturalWidth,ih=img.naturalHeight;var scale=iw/ih>1?ah/ih:aw/iw;
+img.style.width=(iw*scale)+'px';img.style.height=(ih*scale)+'px';
+img.style.left=((aw-iw*scale)/2)+'px';img.style.top=((ah-ih*scale)/2)+'px';
+var sx,sy,sl,st;
+function onS(e){e.preventDefault();var p=e.touches?e.touches[0]:e;sx=p.clientX;sy=p.clientY;sl=parseFloat(img.style.left)||0;st=parseFloat(img.style.top)||0;}
+function onM(e){if(sx===undefined)return;e.preventDefault();var p=e.touches?e.touches[0]:e;img.style.left=(sl+p.clientX-sx)+'px';img.style.top=(st+p.clientY-sy)+'px';}
+function onE(){sx=undefined}
+area.addEventListener('touchstart',onS,{passive:false});area.addEventListener('touchmove',onM,{passive:false});area.addEventListener('touchend',onE);
+area.addEventListener('mousedown',onS);area.addEventListener('mousemove',onM);area.addEventListener('mouseup',onE);
+};
+}
+function saveCrop(mode){
+var img=document.getElementById('cropImg');var canvas=document.createElement('canvas');
+canvas.width=180;canvas.height=180;var ctx=canvas.getContext('2d');
+var l=parseFloat(img.style.left)||0;var t=parseFloat(img.style.top)||0;
+var dw=parseFloat(img.style.width);var dh=parseFloat(img.style.height);
+ctx.drawImage(img,-l/dw*img.naturalWidth,-t/dh*img.naturalHeight,180/dw*img.naturalWidth,180/dh*img.naturalHeight,0,0,180,180);
+var dataUrl=canvas.toDataURL('image/jpeg',0.85);
+if(mode==='addItem'&&window._tempItem){
+S.shop.push({id:Date.now(),name:window._tempItem.name,img:dataUrl,price:window._tempItem.price,gpCost:window._tempItem.gpCost,gpInvested:0,unlocked:false});
+window._tempItem=null;save();closeModal();toast('💫 위시리스트 추가!');
+if(curTab!==1){curTab=1;switchTab(1);}else render();
+} else closeModal();
+}
+
+function closeModal(){document.getElementById('modal').innerHTML=''}
+function showConfetti(fromBottom){
+var c=document.createElement('div');c.className='confetti';
+var colors=['#D4A017','#FFD700','#E8C020','#4A6FA5','#5B9A3A','#C0392B','#FF8C42'];
+for(var i=0;i<40;i++){var p=document.createElement('div');p.className='confetti-piece'+(fromBottom?' from-bottom':'');p.style.left=Math.random()*100+'%';p.style.background=colors[Math.floor(Math.random()*colors.length)];p.style.animationDelay=Math.random()+'s';p.style.width=(4+Math.random()*6)+'px';p.style.height=(4+Math.random()*6)+'px';c.appendChild(p);}
+document.body.appendChild(c);setTimeout(function(){c.remove()},3000);
+}
+function exportBackup(){var d=JSON.stringify(S,null,2);var b=new Blob([d],{type:'application/json'});var u=URL.createObjectURL(b);var a=document.createElement('a');a.href=u;a.download='idol-diary-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(u);toast('백업 완료! 📦');}
+function importBackup(input){var f=input.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){try{var d=JSON.parse(e.target.result);if(confirm('기존 데이터를 덮어쓸까요?')){S=d;save();render();toast('복원 완료! 📥');}}catch(err){toast('파일 오류!');}};r.readAsText(f);}
+function resetData(){if(!confirm('정말 전체 리셋?'))return;if(!confirm('되돌릴 수 없어요!'))return;localStorage.removeItem('wk_idol');localStorage.removeItem('wk_prince');location.reload();}
+
+// migrate
+S.history.forEach(function(h){if(!h.year){var p=h.date.split('/');var n=new Date();h.month=parseInt(p[0])-1;h.day=parseInt(p[1]);h.year=n.getFullYear();}});
+save();render();
+</script>
+</body>
+</html>
