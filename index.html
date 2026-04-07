@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#FDF8F2">
-<title>연습생 다이어리</title>
+<title>아이돌 연습생 트레이닝</title>
 <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Nanum+Pen+Script&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#FDF8F2;--sf:#F8EFE4;--sf2:#F0E4D4;--tx:#5C4A3E;--tm:#8A7868;--th:#B8A898;--pink:#E8B4B8;--pink2:#D49498;--lav:#C8B5D9;--lav2:#A890C0;--rose:#D4A5A5;--rose2:#B8869A;--accent:#B8869A;--good:#88B8A8;--warn:#E8A878;--card:#FFFBF6;--paper:#FAF4E8;--border:#E0D0BC;--border2:#D4C0A8;--tape:#E8D4B0;--shadow:2px 3px 8px rgba(180,140,120,.15);--shadow2:3px 4px 12px rgba(180,140,120,.2)}
@@ -302,32 +302,32 @@ body{font-family:'Noto Sans KR','Gaegu',sans-serif;background:var(--bg);color:va
 <script>
 // === MANAGER COMMENTS ===
 var COMMENTS_STR=[
-'오늘 퍼포먼스 좋았어, 이대로만 가자.',
-'프로듀서님이 고개를 끄덕이셨어.',
-'무대 위의 너, 점점 빛나고 있어.',
-'동작 라인이 살아나고 있어. 계속 가자.',
-'카메라에 담길 너의 모습이 기대돼.',
-'오늘 연습 기록 다이어리에 남겨둘게.',
-'땀 한 방울이 데뷔를 만들어, 잘했어.',
-'거울 속의 너, 확실히 달라졌어.',
-'안무 디테일이 살아났어. 멋졌어.',
-'프로듀서님 메모: "성장 중".',
-'한 곡 한 곡이 너의 무대가 될 거야.',
-'오늘도 진짜 멋졌어, 우리 연습생.'
+'오늘 퍼포먼스 연습 끝! 나 진짜 잘했다.',
+'거울 속 내 동작 라인이 어제보다 살아났어.',
+'한 세트 한 세트, 내가 만든 오늘의 무대.',
+'힘들었는데 끝까지 해낸 내가 대견해.',
+'조금씩 단단해지는 중인 게 느껴져.',
+'오늘의 나, 어제의 나보다 한 뼘 자랐어.',
+'땀 흘린 만큼 내 무대에 가까워지고 있어.',
+'거울 앞의 내가 점점 마음에 들어.',
+'디테일까지 챙긴 오늘의 나, 칭찬해.',
+'연습 기록 한 줄 더 쌓았다. 뿌듯해.',
+'내 페이스대로, 내 속도로, 잘 가고 있어.',
+'오늘도 나랑 약속 지킨 나. 고마워.'
 ];
 var COMMENTS_STA=[
-'무대 체력 훈련 완료! 호흡이 좋아졌어.',
-'풀곡도 거뜬해질 거야, 잘했어.',
-'심장 박동이 리듬을 익히고 있어.',
-'춤추면서도 노래할 수 있는 체력, 만들어지고 있어.',
-'데뷔 무대에서 빛날 체력이 쌓이는 중.',
-'오늘도 끝까지 해냈네, 멋져.',
-'스태미나가 곧 카리스마야.',
-'무대 위 마지막 1분을 위한 훈련, 성공.',
-'호흡 조절까지 완벽해지고 있어.',
-'프로듀서님이 박수 치셨어 (마음속으로).',
-'네 무대 체력이 곧 너의 무기야.',
-'오늘 훈련, 다이어리에 별표 쳐둘게.'
+'무대 체력 훈련 끝! 호흡이 한결 편해졌어.',
+'풀곡도 거뜬하게 해낼 나를 상상하면서 뛰었어.',
+'심장이 리듬을 익혀가는 게 느껴져.',
+'춤추면서 노래할 체력, 조금씩 쌓이는 중.',
+'데뷔 무대에서 빛날 체력, 오늘 1% 더 채웠다.',
+'끝까지 버텨낸 내가 멋지다.',
+'스태미나가 곧 나의 카리스마가 될 거야.',
+'마지막 1분을 위한 훈련, 오늘도 성공.',
+'호흡 조절까지 내 것으로 만들어가는 중.',
+'오늘의 러닝, 내일의 무대를 위한 투자.',
+'힘든 순간을 넘긴 나, 진짜 강해지고 있어.',
+'오늘 훈련 다이어리에 별표 하나 더 ⭐'
 ];
 var GP_STR=12;
 var GP_STA=8;
@@ -553,8 +553,11 @@ return {grade:grade,score:score,reasons:reasons};
 // === WORKOUT TAB ===
 function renderWorkout(){
 var r=curRoutine();
-var h='<div class="header"><h1 class="hand">📔 연습생 다이어리</h1>';
-h+='</div>';
+var h='<div class="header"><h1 class="hand">📔 아이돌 연습생 트레이닝</h1></div>';
+var ev=getWeeklyGrade();
+h+='<div class="eval-card"><div style="font-size:12px;color:var(--tm);letter-spacing:1px">이번 주 평가</div>';
+h+='<div class="eval-grade '+ev.grade.toLowerCase()+'">'+ev.grade+'</div>';
+h+='<div style="font-size:12px;color:var(--th)">'+ev.score+'점 · '+ev.reasons.join(' · ')+'</div></div>';
 h+=renderConditionCard();
 // Practice Board
 h+='<div class="guild-board"><div class="board-slots">';
@@ -566,8 +569,9 @@ var gp=rt.type==='cardio'?GP_STA:GP_STR;
 h+='<div class="board-slot '+cls+'">'+rt.icon+' '+rt.name+' — '+gp+' DP</div>';
 }
 h+='</div></div>';
-var guildMsgs=['꾸준함이 재능이야','오늘도 반짝이는 너','거울 앞의 너를 믿어','한 뼘씩 성장 중','컨디션도 실력이야','내일의 무대를 위해','작은 연습이 큰 무대가 돼','너의 페이스대로','포기하지 않는 마음이 스타를 만들어','오늘도 애썼어, 연습생','프로듀서님이 지켜보고 계셔','데뷔까지 한 걸음 더'];
-h+='<div class="hand" style="text-align:center;margin:-4px 0 10px;font-size:18px;color:var(--tm);letter-spacing:1px">💬 매니저: '+guildMsgs[Math.floor(Math.random()*guildMsgs.length)]+'</div>';
+var diaryMsgs=['꾸준함이 나의 재능.','오늘도 반짝이는 나.','거울 앞의 나를 믿어.','한 뼘씩 자라는 중.','컨디션도 실력, 잘 챙기자.','내일의 무대를 위해 오늘의 나.','작은 연습이 큰 무대가 될 거야.','내 페이스대로, 내 속도로.','포기하지 않는 내가 결국 데뷔해.','오늘도 애쓴 나, 칭찬해.','나는 내 편이야.','데뷔까지 한 걸음 더.'];
+var _d=new Date();var _di=(_d.getFullYear()*372+_d.getMonth()*31+_d.getDate())%diaryMsgs.length;
+h+='<div class="hand" style="text-align:center;margin:-4px 0 10px;font-size:18px;color:var(--tm);letter-spacing:1px">✍️ 오늘의 한 줄: '+diaryMsgs[_di]+'</div>';
 // DP + 위시리스트 합친 카드
 h+='<div class="gp-bar">';
 h+='<div style="display:flex;align-items:center;gap:6px">';
@@ -882,11 +886,6 @@ S.shop.splice(idx,1);save();closeModal();render();toast('삭제 완료!');
 // === CALENDAR ===
 function renderCalendar(){
 var h='<div class="header"><h1 class="hand">📓 연습 일지</h1></div>';
-// 이번 주 평가
-var ev=getWeeklyGrade();
-h+='<div class="eval-card"><div style="font-size:12px;color:var(--tm);letter-spacing:1px">이번 주 평가</div>';
-h+='<div class="eval-grade '+ev.grade.toLowerCase()+'">'+ev.grade+'</div>';
-h+='<div style="font-size:12px;color:var(--th)">'+ev.score+'점 · '+ev.reasons.join(' · ')+'</div></div>';
 // 누적 기록
 h+='<div style="margin:10px 0;padding:12px;background:var(--card);border:3px solid var(--border);border-radius:0;box-shadow:var(--shadow)">';
 h+='<div class="hand" style="font-size:18px;color:var(--gold2);margin-bottom:6px;text-align:center;letter-spacing:2px">📊 누적 기록</div>';
