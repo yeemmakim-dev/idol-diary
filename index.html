@@ -329,8 +329,6 @@ var COMMENTS_STA=[
 '힘든 순간을 넘긴 나, 진짜 강해지고 있어.',
 '오늘 훈련 다이어리에 별표 하나 더 ⭐'
 ];
-var GP_STR=12;
-var GP_STA=8;
 
 // === EXERCISE POOL ===
 var POOL={
@@ -397,6 +395,80 @@ var seed=idx*4219+17;var rng=seededRand(seed);
 var pick=CARDIO_OPTIONS[Math.floor(rng()*CARDIO_OPTIONS.length)];
 return {type:'cardio',name:'무대 체력 훈련',icon:'💃',short:'무대체력',dur:pick.dur,desc:pick.desc,cardioName:pick.name};
 }
+// === CONTRACT HELPERS ===
+function pad2(n){return (n<10?'0':'')+n}
+function ymd(d){return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())}
+function parseYmd(s){var p=s.split('-');return new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]))}
+function getTierFromPrice(priceStr){
+  if(!priceStr)return 1;
+  var s=String(priceStr).replace(/,/g,'').replace(/\s/g,'');
+  var manMatch=s.match(/([0-9]+(?:\.[0-9]+)?)\s*만/);
+  var n;
+  if(manMatch){n=parseFloat(manMatch[1])*10000;}
+  else{var m=s.match(/([0-9]+(?:\.[0-9]+)?)/);if(!m)return 1;n=parseFloat(m[1]);}
+  if(isNaN(n))return 1;
+  var t=(S&&S.priceTiers)?S.priceTiers.slice().sort(function(a,b){return a-b}):[30000,100000,300000];
+  if(n<t[0])return 1;
+  if(n<t[1])return 2;
+  if(n<t[2])return 3;
+  return 4;
+}
+function makeContract(tier){
+  var now=new Date();
+  var end=new Date(now.getFullYear(),now.getMonth()+1,0);
+  var daysToEnd=Math.ceil((end-now)/86400000);
+  if(daysToEnd<7){end=new Date(now.getFullYear(),now.getMonth()+2,0);}
+  var needAtt={1:8,2:12,3:16,4:20}[tier]||8;
+  var needMood={1:2,2:3,3:3,4:4}[tier]||2;
+  return {start:ymd(now),end:ymd(end),needAttendance:needAtt,needMoodAvg:needMood,needWeightGoal:tier===4,status:'active'};
+}
+function getContractProgress(item){
+  if(!item.contract)return {attendance:0,moodAvg:0,weightOk:false,pct:0,meetsAll:false};
+  var c=item.contract;
+  var start=parseYmd(c.start);var end=parseYmd(c.end);
+  var today=new Date();today.setHours(23,59,59,999);
+  var rangeEnd=today<end?today:end;
+  var days={};
+  S.history.forEach(function(h){var d=new Date(h.year,h.month,h.day);if(d>=start&&d<=rangeEnd){days[h.year+'-'+h.month+'-'+h.day]=true;}});
+  var attendance=Object.keys(days).length;
+  var moodMap={'😊':5,'🙂':4,'😐':3,'😔':2,'😣':1};
+  var mSum=0,mN=0;
+  var cursor=new Date(start);
+  while(cursor<=rangeEnd){
+    var k=cursor.getFullYear()+'-'+(cursor.getMonth()+1)+'-'+cursor.getDate();
+    var cc=S.condition[k];
+    if(cc&&cc.mood&&moodMap[cc.mood]){mSum+=moodMap[cc.mood];mN++;}
+    cursor.setDate(cursor.getDate()+1);
+  }
+  var moodAvg=mN?(mSum/mN):0;
+  var weightOk=true;
+  if(c.needWeightGoal){
+    if(S.targetWeight&&S.weights.length){
+      var lastW=S.weights[S.weights.length-1].kg;
+      weightOk=Math.abs(lastW-S.targetWeight)<=1;
+    } else weightOk=false;
+  }
+  var attPct=Math.min(1,attendance/c.needAttendance);
+  var moodPct=Math.min(1,moodAvg/c.needMoodAvg);
+  var wPct=c.needWeightGoal?(weightOk?1:0):1;
+  var parts=c.needWeightGoal?[attPct,moodPct,wPct]:[attPct,moodPct];
+  var pct=Math.round(parts.reduce(function(a,b){return a+b},0)/parts.length*100);
+  var meetsAll=attendance>=c.needAttendance&&moodAvg>=c.needMoodAvg&&weightOk;
+  return {attendance:attendance,moodAvg:moodAvg,weightOk:weightOk,pct:pct,meetsAll:meetsAll};
+}
+function runMonthEndCheck(){
+  var today=new Date();today.setHours(0,0,0,0);
+  (S.shop||[]).forEach(function(item){
+    if(!item.contract||item.contract.status!=='active')return;
+    var end=parseYmd(item.contract.end);
+    if(today>end){
+      var p=getContractProgress(item);
+      item.contract.status=p.meetsAll?'approved':'failed';
+      if(p.meetsAll)item.unlocked=true;
+    }
+  });
+}
+
 var CYCLE_PATTERN=['strength','cardio','strength','cardio','strength'];
 function getRoutineForCycle(gi){var pos=gi%5;return CYCLE_PATTERN[pos]==='cardio'?generateCardio(gi):generateRoutine(gi)}
 var SWAP_MAX=3;
@@ -411,8 +483,6 @@ if(!S.swaps)S.swaps={};
 if(!S.swapped)S.swapped={};
 if(!S.extras)S.extras=[];
 if(!S.customPool)S.customPool=[];
-if(!S.gp)S.gp=0;
-if(!S.spentGp)S.spentGp=0;
 if(!S.shop)S.shop=[];
 if(!S.archivedShop)S.archivedShop=[];
 if(!S.config)S.config={sets:3,reps:10,coreSets:2,coreReps:10,cardioDur:25};
@@ -421,21 +491,18 @@ if(!S.condition)S.condition={};
 if(S.targetWeight===undefined)S.targetWeight=null;
 if(S.debutDate===undefined)S.debutDate=null;
 if(S.strChoice===undefined)S.strChoice=null;
-// Migrate old str/sta to gp
-if(S.str||S.sta){S.gp=(S.str||0)*GP_STR+(S.sta||0)*GP_STA;delete S.str;delete S.sta;S.spentGp=(S.spentStr||0)*GP_STR+(S.spentSta||0)*GP_STA;delete S.spentStr;delete S.spentSta;}
-// Migrate old shop items
-S.shop.forEach(function(item){
-if(item.strCost!==undefined&&item.gpCost===undefined){
-item.gpCost=item.strCost*GP_STR+item.staCost*GP_STA;
-item.gpInvested=(item.strInvested||0)*GP_STR+(item.staInvested||0)*GP_STA;
-delete item.strCost;delete item.staCost;delete item.strInvested;delete item.staInvested;
-}
-});
-if(S.reward&&S.reward.img&&S.shop.length===0){
-S.shop.push({id:Date.now(),name:S.reward.name||'보상',img:S.reward.img,price:S.reward.price||'',gpCost:200,gpInvested:0,unlocked:false});
+if(!S.priceTiers||!S.priceTiers.length)S.priceTiers=[30000,100000,300000];
+// Drop legacy DP fields
+delete S.gp;delete S.spentGp;delete S.str;delete S.sta;delete S.spentStr;delete S.spentSta;
 delete S.reward;
-}
-if(!S.reward)S.reward={};
+// Migrate shop items to contract schema
+S.shop.forEach(function(item){
+  delete item.gpCost;delete item.gpInvested;
+  delete item.strCost;delete item.staCost;delete item.strInvested;delete item.staInvested;
+  if(!item.tier)item.tier=getTierFromPrice(item.price);
+  if(!item.contract){item.contract=makeContract(item.tier);}
+  if(item.unlocked===undefined)item.unlocked=false;
+});
 
 var curTab=0;
 var calYear,calMonth;
@@ -449,7 +516,6 @@ function toast(m){var t=document.getElementById('toast');t.textContent=m;t.class
 function curRoutine(){return getRoutineForCycle(S.idx)}
 function curMonthKey(){var d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)}
 function getSwapsUsed(){return S.swaps[curMonthKey()]||0}
-function getAvailGp(){return S.gp-S.spentGp}
 function getStreak(){
 var days={};S.history.forEach(function(h){days[h.year+'-'+h.month+'-'+h.day]=true});
 var d=new Date();var tk=d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate();
@@ -466,15 +532,17 @@ else if(curTab===2)renderCalendar();
 else renderWeight();
 }
 
-// === DP BAR ===
-function renderGpBar(){
+// === STREAK CARD ===
+function renderStreakCard(){
+var now=new Date();
+var dstr=now.getFullYear()+'.'+(now.getMonth()+1)+'.'+now.getDate();
 var h='<div class="gp-bar">';
-h+='<div class="gp-coin">💎</div>';
-h+='<div class="gp-info"><div class="gp-label">DEBUT POINT</div>';
-h+='<div class="gp-val">'+getAvailGp()+' <span style="font-size:14px;color:#C8A870">DP</span></div>';
-h+='<div class="gp-avail">총 '+S.gp+' DP 획득</div>';
-h+='</div>';
-h+='<div class="gp-streak"><div class="gp-streak-num">'+getStreak()+'</div><div class="gp-streak-label">🔥 연속 연습</div></div>';
+h+='<div style="display:flex;align-items:center;gap:10px;flex:1">';
+h+='<div class="gp-coin">🔥</div>';
+h+='<div class="gp-info"><div class="gp-label">연속 연습</div>';
+h+='<div class="gp-val">'+getStreak()+' <span style="font-size:14px;color:var(--th)">일</span></div>';
+h+='<div class="gp-avail">'+dstr+'</div>';
+h+='</div></div>';
 h+='</div>';
 return h;
 }
@@ -513,19 +581,18 @@ h+='</div>';
 return h;
 }
 
-// === WEEKLY EVALUATION ===
-function getWeeklyGrade(){
-var now=new Date();var weekStart=new Date(now);weekStart.setDate(now.getDate()-now.getDay());weekStart.setHours(0,0,0,0);
+// === MONTHLY EVALUATION ===
+function getMonthlyGrade(){
+var now=new Date();var monthStart=new Date(now.getFullYear(),now.getMonth(),1);monthStart.setHours(0,0,0,0);
 var workoutDays={};
-S.history.forEach(function(h){var d=new Date(h.year,h.month,h.day);if(d>=weekStart&&d<=now)workoutDays[h.year+'-'+h.month+'-'+h.day]=true;});
+S.history.forEach(function(h){var d=new Date(h.year,h.month,h.day);if(d>=monthStart&&d<=now)workoutDays[h.year+'-'+h.month+'-'+h.day]=true;});
 var workoutCount=Object.keys(workoutDays).length;
-var daysSoFar=now.getDay()+1;
+var daysSoFar=now.getDate();
 var workoutScore=Math.min(40,Math.round(workoutCount/Math.max(1,daysSoFar)*40));
-// condition avg
 var sleepSum=0,sleepN=0,waterSum=0,waterN=0,moodSum=0,moodN=0;
 var moodMap={'😊':5,'🙂':4,'😐':3,'😔':2,'😣':1};
 for(var i=0;i<daysSoFar;i++){
-  var d=new Date(weekStart);d.setDate(weekStart.getDate()+i);
+  var d=new Date(monthStart);d.setDate(monthStart.getDate()+i);
   var k=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
   var c=S.condition[k];if(!c)continue;
   if(c.sleep!=null){sleepSum+=c.sleep;sleepN++;}
@@ -555,8 +622,9 @@ return {grade:grade,score:score,reasons:reasons};
 function renderWorkout(){
 var r=curRoutine();
 var h='<div class="header"><h1 class="hand">📔 아이돌이 될거야!</h1></div>';
-var ev=getWeeklyGrade();
-h+='<div class="eval-card"><div style="font-size:12px;color:var(--tm);letter-spacing:1px">이번 주 평가</div>';
+runMonthEndCheck();
+var ev=getMonthlyGrade();
+h+='<div class="eval-card"><div style="font-size:12px;color:var(--tm);letter-spacing:1px">이번 달 월말평가</div>';
 h+='<div class="eval-grade '+ev.grade.toLowerCase()+'">'+ev.grade+'</div>';
 h+='<div style="font-size:12px;color:var(--th)">'+ev.score+'점 · '+ev.reasons.join(' · ')+'</div></div>';
 h+=renderConditionCard();
@@ -566,39 +634,13 @@ var ci=S.idx%5;
 for(var gi=0;gi<5;gi++){
 var rt=getRoutineForCycle(S.idx-ci+gi);
 var cls=gi===ci?'now':(gi<ci?'done-step':'');
-var gp=rt.type==='cardio'?GP_STA:GP_STR;
-h+='<div class="board-slot '+cls+'">'+rt.icon+' '+rt.name+' — '+gp+' DP</div>';
+h+='<div class="board-slot '+cls+'">'+rt.icon+' '+rt.name+'</div>';
 }
 h+='</div></div>';
 var diaryMsgs=['꾸준함이 나의 재능.','오늘도 반짝이는 나.','거울 앞의 나를 믿어.','한 뼘씩 자라는 중.','컨디션도 실력, 잘 챙기자.','내일의 무대를 위해 오늘의 나.','작은 연습이 큰 무대가 될 거야.','내 페이스대로, 내 속도로.','포기하지 않는 내가 결국 데뷔해.','오늘도 애쓴 나, 칭찬해.','나는 내 편이야.','데뷔까지 한 걸음 더.'];
 var _d=new Date();var _di=(_d.getFullYear()*372+_d.getMonth()*31+_d.getDate())%diaryMsgs.length;
 h+='<div class="hand" style="text-align:center;margin:-4px 0 10px;font-size:18px;color:var(--tm);letter-spacing:1px">✍️ 오늘의 한 줄: '+diaryMsgs[_di]+'</div>';
-// DP + 위시리스트 합친 카드
-h+='<div class="gp-bar">';
-h+='<div style="display:flex;align-items:center;gap:6px">';
-h+='<div class="gp-coin">💎</div>';
-h+='<div class="gp-val">'+getAvailGp()+' <span style="font-size:12px;color:var(--th)">데뷔 포인트 (DP)</span></div>';
-h+='<span style="font-size:9px;color:var(--th)">(총 '+S.gp+')</span>';
-h+='</div>';
-h+='<div class="gp-streak"><div class="gp-streak-num">'+getStreak()+'</div><div class="gp-streak-label">🔥 연속 연습</div></div>';
-var exchangeable=S.shop.filter(function(it){return it.gpInvested<it.gpCost});
-if(exchangeable.length>0){
-h+='<div style="width:100%;border-top:1px solid rgba(200,168,112,.3);margin-top:8px;padding-top:8px">';
-h+='<div style="font-size:13px;color:var(--gold2);margin-bottom:6px;letter-spacing:1px;text-align:center">💫 위시리스트</div>';
-exchangeable.forEach(function(item){
-var pct=Math.min(100,Math.round(item.gpInvested/Math.max(1,item.gpCost)*100));
-var remaining=Math.max(0,item.gpCost-item.gpInvested);
-h+='<div class="mini-item">';
-h+='<img class="mini-item-img locked" src="'+item.img+'" draggable="false">';
-h+='<div class="mini-item-info"><div class="mini-item-name">'+item.name+'</div>';
-h+='<div class="mini-prog"><div class="mini-prog-fill" style="width:'+pct+'%"></div></div>';
-h+='</div>';
-h+='<div class="mini-item-gp">'+item.gpInvested+'/'+item.gpCost+'<div style="font-size:9px;color:#C8A870;margin-top:1px">남은 '+remaining+' DP</div></div>';
-h+='</div>';
-});
-h+='</div>';
-}
-h+='</div>';
+h+=renderStreakCard();
 // Exercises
 if(r.type==='cardio'){
 var picked=S.cardioChoice;
@@ -617,8 +659,7 @@ h+='</div>';
 } else {
 var cc=allCardio[picked];
 h+='<h2>'+cc.icon+' '+cc.name+'</h2><p>'+cc.dur+' · '+cc.desc+'</p>';
-h+='<div style="font-size:13px;color:var(--gold2);font-weight:700;margin:8px 0">💎 보상: '+GP_STA+' DP</div>';
-h+='<button class="btn-gold" onclick="completeCardio('+picked+')">연습 완료! +'+GP_STA+' DP</button>';
+h+='<button class="btn-gold" onclick="completeCardio('+picked+')">연습 완료 ✨</button>';
 h+='<button class="btn-ghost" style="margin-top:6px" onclick="pickCardio(null)">다른 연습 선택</button>';
 }
 if(S.idx>0) h+='<button class="btn-skip" onclick="goBack()" style="margin-top:4px">↩ 되돌리기</button>';
@@ -642,8 +683,7 @@ h+='</div>';
 h+='<div class="walk-card">';
 h+='<h2>🏋️ 그룹 클래스</h2>';
 h+='<p>'+r.icon+' '+r.name+'</p>';
-h+='<div style="font-size:13px;color:var(--gold2);font-weight:700;margin:8px 0">💎 보상: '+GP_STR+' DP</div>';
-h+='<button class="btn-gold" onclick="completeCrossfit()">수업 완료! +'+GP_STR+' DP</button>';
+h+='<button class="btn-gold" onclick="completeCrossfit()">수업 완료 ✨</button>';
 h+='<button class="btn-ghost" style="margin-top:6px" onclick="pickStrType(null)">다른 방식 선택</button>';
 if(S.idx>0) h+='<button class="btn-skip" onclick="goBack()" style="margin-top:4px">↩ 되돌리기</button>';
 h+='</div>';
@@ -710,76 +750,76 @@ setTimeout(restoreRestUI,50);
 
 // === STYLING ROOM TAB ===
 function renderShop(){
+runMonthEndCheck();
 var h='<div class="header"><h1 class="hand">💫 스타일링 룸</h1>';
-h+='<div class="header-sub">DP로 위시리스트를 채워보세요</div></div>';
-h+=renderGpBar();
+h+='<div class="header-sub">계약과 월말평가로 아이템을 획득해요</div></div>';
+h+=renderStreakCard();
 if(S.shop.length===0){
 h+='<div style="text-align:center;padding:36px 16px;color:var(--th)">';
 h+='<div style="font-size:44px;margin-bottom:10px;animation:floaty 2.5s ease-in-out infinite">💫</div>';
 h+='<p style="font-size:13px;color:var(--tm);margin-bottom:4px">아직 위시리스트가 비어있어요</p>';
 h+='<p style="font-size:11px">데뷔 후 입고 싶은 옷, 사고 싶은 아이템을<br>기록해보세요 💫</p></div>';
 } else {
-// Claimable items
-var claimable=S.shop.filter(function(it){return it.gpInvested>=it.gpCost&&it.unlocked});
-var inProgress=S.shop.filter(function(it){return it.gpInvested<it.gpCost||!it.unlocked});
-if(claimable.length>0){
-h+='<div class="shop-section"><div class="shop-section-title">💖 획득 완료</div>';
-claimable.forEach(function(item,i){
-var idx=S.shop.indexOf(item);
-h+='<div class="shop-item unlocked">';
-h+='<div class="shop-item-top">';
-h+='<img class="shop-item-img" src="'+item.img+'" draggable="false">';
-h+='<div class="shop-item-info"><div class="shop-item-name">✨ '+item.name+'</div>';
-if(item.price)h+='<div class="shop-item-price">💎 '+item.price+'</div>';
-h+='</div>';
-h+='<button onclick="editShopItem('+idx+')" style="background:none;border:none;color:var(--th);cursor:pointer;font-size:11px;padding:4px">✏️</button>';
-h+='<button onclick="archiveShopItem('+idx+')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:11px;padding:4px">🗑️</button>';
-h+='</div>';
-h+='<div style="text-align:center;margin-top:6px"><span class="shop-unlocked-badge">💖 획득 완료!</span></div>';
-h+='</div>';
+S.shop.forEach(function(item){
+  if(!item.contract)item.contract=makeContract(item.tier||getTierFromPrice(item.price));
 });
-h+='</div>';
+var approved=S.shop.filter(function(it){return it.contract&&it.contract.status==='approved'});
+var active=S.shop.filter(function(it){return it.contract&&it.contract.status==='active'});
+var failed=S.shop.filter(function(it){return it.contract&&it.contract.status==='failed'});
+function fmtDate(s){var p=s.split('-');return p[0]+'.'+p[1]+'.'+p[2]}
+function stars(t){return '⭐'.repeat(t)}
+function renderItemCard(item){
+  var idx=S.shop.indexOf(item);
+  var c=item.contract;
+  var prog=getContractProgress(item);
+  var h='<div class="shop-item'+(c.status==='approved'?' unlocked':'')+'">';
+  h+='<div class="shop-item-top">';
+  h+='<img class="shop-item-img'+(c.status!=='approved'?' locked':'')+'" src="'+item.img+'" draggable="false">';
+  h+='<div class="shop-item-info"><div class="shop-item-name">'+(c.status==='approved'?'✨ ':'')+item.name+'</div>';
+  if(item.price)h+='<div class="shop-item-price">'+item.price+' · '+stars(item.tier)+'</div>';
+  h+='<div class="shop-item-price">📅 '+fmtDate(c.start).slice(0,10)+' – '+c.end.slice(5).replace('-','.')+'</div>';
+  h+='</div>';
+  h+='<button onclick="editShopItem('+idx+')" style="background:none;border:none;color:var(--th);cursor:pointer;font-size:11px;padding:4px">✏️</button>';
+  if(c.status==='approved')h+='<button onclick="archiveShopItem('+idx+')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:11px;padding:4px">🗑️</button>';
+  h+='</div>';
+  if(c.status==='active'){
+    h+='<div style="text-align:center;margin-top:8px"><span class="shop-item-cost">📝 계약 중</span></div>';
+    var attPct=Math.min(100,Math.round(prog.attendance/c.needAttendance*100));
+    h+='<div class="shop-prog"><div class="shop-prog-bar"><div class="shop-prog-fill" style="width:'+attPct+'%"></div></div>';
+    h+='<div class="shop-prog-info"><span>출석 '+prog.attendance+'/'+c.needAttendance+'일</span><span>'+attPct+'%</span></div></div>';
+    var mPct=Math.min(100,Math.round(prog.moodAvg/c.needMoodAvg*100));
+    h+='<div class="shop-prog"><div class="shop-prog-bar"><div class="shop-prog-fill" style="width:'+mPct+'%"></div></div>';
+    h+='<div class="shop-prog-info"><span>컨디션 평균 '+prog.moodAvg.toFixed(1)+'/'+c.needMoodAvg+'</span><span>'+mPct+'%</span></div></div>';
+    if(c.needWeightGoal){
+      h+='<div class="shop-prog-info" style="margin-top:6px"><span>체중 목표 (±1kg)</span><span>'+(prog.weightOk?'✓':'✗')+'</span></div>';
+    }
+    h+='<div style="text-align:center;font-size:11px;color:var(--tm);margin-top:6px">종합 진행도 '+prog.pct+'%</div>';
+  } else if(c.status==='approved'){
+    h+='<div style="text-align:center;margin-top:6px"><span class="shop-unlocked-badge">✅ 회사 승인</span></div>';
+  } else if(c.status==='failed'){
+    h+='<div style="text-align:center;margin-top:6px"><span class="shop-unlocked-badge" style="background:var(--th)">❌ 계약 해지</span></div>';
+    h+='<button class="shop-exchange-btn" style="margin-top:6px" onclick="renewContract('+idx+')">🔄 재계약</button>';
+  }
+  h+='</div>';
+  return h;
 }
-if(inProgress.length>0){
-h+='<div class="shop-section"><div class="shop-section-title">💫 위시리스트</div>';
-inProgress.forEach(function(item){
-var idx=S.shop.indexOf(item);
-var unlocked=item.gpInvested>=item.gpCost;
-if(unlocked&&!item.unlocked){item.unlocked=true;save();}
-var pct=Math.min(100,Math.round(item.gpInvested/Math.max(1,item.gpCost)*100));
-var canExchange=getAvailGp()>0&&item.gpInvested<item.gpCost;
-var remaining=item.gpCost-item.gpInvested;
-h+='<div class="shop-item">';
-h+='<div class="shop-item-top">';
-h+='<img class="shop-item-img locked" src="'+item.img+'" draggable="false">';
-h+='<div class="shop-item-info"><div class="shop-item-name">'+item.name+'</div>';
-if(item.price) h+='<div class="shop-item-price">💎 '+item.price+'</div>';
-h+='<div class="shop-item-cost">💎 '+item.gpCost+' DP 필요</div>';
-h+='</div>';
-h+='<button onclick="editShopItem('+idx+')" style="background:none;border:none;color:var(--th);cursor:pointer;font-size:11px;padding:4px">✏️</button>';
-h+='</div>';
-h+='<div class="shop-prog"><div class="shop-prog-bar"><div class="shop-prog-fill" style="width:'+pct+'%"></div></div>';
-h+='<div class="shop-prog-info"><span>'+item.gpInvested+' / '+item.gpCost+' DP</span><span>남은 '+remaining+' DP</span></div></div>';
-// Exchange buttons
-h+='<div style="display:flex;gap:6px;margin-top:6px">';
-var amounts=[1,5,10];
-amounts.forEach(function(a){
-var canA=getAvailGp()>=a&&item.gpInvested+a<=item.gpCost;
-var actualA=Math.min(a,item.gpCost-item.gpInvested,getAvailGp());
-h+='<button class="shop-exchange-btn" style="flex:1;font-size:11px;padding:6px" onclick="investGp('+idx+','+actualA+')"'+(canA||actualA>0?'':' disabled')+'>+'+a+' DP</button>';
-});
-// All-in button
-var allIn=Math.min(getAvailGp(),remaining);
-if(allIn>10) h+='<button class="shop-exchange-btn" style="flex:1;font-size:11px;padding:6px" onclick="investGp('+idx+','+allIn+')"'+(allIn>0?'':' disabled')+'>전부</button>';
-h+='</div>';
-h+='</div>';
-});
-h+='</div>';
+if(approved.length>0){
+  h+='<div class="shop-section"><div class="shop-section-title">💖 회사 승인</div>';
+  approved.forEach(function(it){h+=renderItemCard(it)});
+  h+='</div>';
+}
+if(active.length>0){
+  h+='<div class="shop-section"><div class="shop-section-title">📝 계약 중</div>';
+  active.forEach(function(it){h+=renderItemCard(it)});
+  h+='</div>';
+}
+if(failed.length>0){
+  h+='<div class="shop-section"><div class="shop-section-title">❌ 계약 해지</div>';
+  failed.forEach(function(it){h+=renderItemCard(it)});
+  h+='</div>';
 }
 }
-h+='<button class="shop-add-btn" onclick="showAddItemModal()">+ 위시리스트에 추가</button>';
-h+='<div style="margin-top:12px;padding:10px;background:var(--sf);border:2px solid var(--border);border-radius:var(--r);font-size:11px;color:var(--th);text-align:center;box-shadow:var(--shadow)">';
-h+='💡 퍼포먼스 연습 → 💎 '+GP_STR+' DP &nbsp;|&nbsp; 무대 체력 훈련 → 💎 '+GP_STA+' DP</div>';
+h+='<button class="shop-add-btn" onclick="showAddItemModal()">+ 새 계약 추가</button>';
 // 획득 완료 아카이브
 var archived=(S.archivedShop||[]);
 if(archived.length>0){
@@ -802,46 +842,50 @@ document.getElementById('app').innerHTML=h;
 
 function archiveShopItem(idx){
 var item=S.shop[idx];
-if(!item||!item.unlocked)return;
+if(!item)return;
 if(!confirm(item.name+' 을(를) 아카이브로 이동할까요?'))return;
 if(!S.archivedShop)S.archivedShop=[];
-S.archivedShop.push({name:item.name,img:item.img,price:item.price,gpCost:item.gpCost});
+S.archivedShop.push({name:item.name,img:item.img,price:item.price,tier:item.tier});
 S.shop.splice(idx,1);save();render();
 toast('📦 '+item.name+' 아카이브 완료!');
 }
-function investGp(idx,amount){
-var item=S.shop[idx];
-var actual=Math.min(amount,getAvailGp(),item.gpCost-item.gpInvested);
-if(actual<=0)return;
-item.gpInvested+=actual;S.spentGp+=actual;save();
-if(item.gpInvested>=item.gpCost&&!item.unlocked){
-item.unlocked=true;save();
-showConfetti();showConfetti(true);
-toast('🎉 '+item.name+' 획득!');
-} else {
-toast('💎 '+actual+' DP 적립!');
-}
-render();
+function renewContract(idx){
+var item=S.shop[idx];if(!item)return;
+var now=new Date();
+var nextMonth=new Date(now.getFullYear(),now.getMonth()+1,1);
+var end=new Date(nextMonth.getFullYear(),nextMonth.getMonth()+1,0);
+var tier=item.tier||1;
+var needAtt={1:8,2:12,3:16,4:20}[tier]||8;
+var needMood={1:2,2:3,3:3,4:4}[tier]||2;
+item.contract={start:ymd(nextMonth),end:ymd(end),needAttendance:needAtt,needMoodAvg:needMood,needWeightGoal:tier===4,status:'active'};
+item.unlocked=false;
+save();render();toast('🔄 재계약 완료!');
 }
 
 function showAddItemModal(){
 var h='<div class="modal-bg" onclick="if(event.target===this)closeModal()">';
 h+='<div class="modal-box" style="max-height:80vh;overflow-y:auto">';
-h+='<h3>💫 위시리스트 추가</h3>';
-h+='<p>갖고 싶은 아이템을 등록해보세요!<br>필요 DP를 설정할 수 있어요.</p>';
+h+='<h3>💫 새 계약 추가</h3>';
+h+='<p>갖고 싶은 아이템으로 계약을 시작해요!</p>';
 h+='<div class="price-row"><span>🏷️</span><input type="text" id="itemName" placeholder="아이템 이름"></div>';
-h+='<div class="price-row"><span>💎</span><input type="text" id="itemPrice" placeholder="가격 (선택)"></div>';
-h+='<div class="cost-input-row"><label>💎 필요 DP</label><input type="number" id="itemGpCost" value="100" min="1"></div>';
-h+='<div style="margin-top:12px"><button class="btn-gold" onclick="triggerItemUpload()">📸 사진 선택 & 등록</button></div>';
+h+='<div class="price-row"><span>💰</span><input type="text" id="itemPrice" placeholder="가격 (예: 50000, 5만원)" oninput="updateTierPreview()"></div>';
+h+='<div id="tierPreview" style="font-size:12px;color:var(--tm);margin-top:6px;text-align:center">난이도: ⭐ (tier 1)</div>';
+h+='<div style="margin-top:12px"><button class="btn-gold" onclick="triggerItemUpload()">📸 사진 선택 & 계약 체결</button></div>';
 h+='<input type="file" id="itemFileInput" accept="image/*" style="display:none" onchange="startItemCrop(this)">';
 h+='<button class="btn-skip" style="margin-top:6px" onclick="closeModal()">취소</button>';
 h+='</div></div>';
 document.getElementById('modal').innerHTML=h;
 }
+function updateTierPreview(){
+var p=document.getElementById('itemPrice').value;
+var t=getTierFromPrice(p);
+var el=document.getElementById('tierPreview');
+if(el)el.textContent='난이도: '+'⭐'.repeat(t)+' (tier '+t+')';
+}
 function triggerItemUpload(){
 var name=document.getElementById('itemName').value.trim();
 if(!name){toast('아이템 이름을 입력해주세요!');return;}
-window._tempItem={name:name,price:document.getElementById('itemPrice').value.trim(),gpCost:parseInt(document.getElementById('itemGpCost').value)||100};
+window._tempItem={name:name,price:document.getElementById('itemPrice').value.trim()};
 document.getElementById('itemFileInput').click();
 }
 function startItemCrop(input){
@@ -857,7 +901,7 @@ h+='<div class="modal-box">';
 h+='<h3>✏️ '+item.name+'</h3>';
 h+='<div class="price-row"><span>🏷️</span><input type="text" id="editName" value="'+item.name+'"></div>';
 h+='<div class="price-row"><span>💰</span><input type="text" id="editPrice" value="'+(item.price||'')+'"></div>';
-if(!item.unlocked) h+='<div class="cost-input-row"><label>💎 필요 DP</label><input type="number" id="editGpCost" value="'+item.gpCost+'" min="1"></div>';
+h+='<div style="font-size:11px;color:var(--tm);margin-top:6px;text-align:center">현재 난이도: '+'⭐'.repeat(item.tier||1)+'</div>';
 h+='<div style="margin-top:12px;display:flex;flex-direction:column;gap:6px">';
 h+='<button class="btn-gold" onclick="saveEditItem('+idx+')">저장</button>';
 h+='<button class="btn-ghost" style="color:var(--red)" onclick="deleteShopItem('+idx+')">🗑️ 삭제</button>';
@@ -868,32 +912,47 @@ document.getElementById('modal').innerHTML=h;
 function saveEditItem(idx){
 var item=S.shop[idx];
 item.name=document.getElementById('editName').value.trim()||item.name;
-item.price=document.getElementById('editPrice').value.trim();
-if(!item.unlocked){
-var newGp=parseInt(document.getElementById('editGpCost').value);
-if(!isNaN(newGp)&&newGp>0){
-if(newGp<item.gpInvested){S.spentGp-=(item.gpInvested-newGp);item.gpInvested=newGp;}
-item.gpCost=newGp;
-}
+var newPrice=document.getElementById('editPrice').value.trim();
+if(newPrice!==item.price){
+  item.price=newPrice;
+  item.tier=getTierFromPrice(newPrice);
 }
 save();closeModal();render();toast('수정 완료!');
 }
 function deleteShopItem(idx){
 if(!confirm('정말 삭제할까요?'))return;
-var item=S.shop[idx];S.spentGp-=item.gpInvested;
 S.shop.splice(idx,1);save();closeModal();render();toast('삭제 완료!');
 }
 
 // === CALENDAR ===
 function renderCalendar(){
+runMonthEndCheck();
 var h='<div class="header"><h1 class="hand">📓 연습 일지</h1></div>';
+// 월말평가 요약
+var mev=getMonthlyGrade();
+var uniqDays={};S.history.forEach(function(hh){uniqDays[hh.year+'-'+hh.month+'-'+hh.day]=true;});
+var totalPracticeDays=Object.keys(uniqDays).length;
+h+='<div style="margin:10px 0;padding:14px;background:var(--card);border:3px solid var(--border);border-radius:0;box-shadow:var(--shadow)">';
+h+='<div class="hand" style="font-size:18px;color:var(--rose2);margin-bottom:6px;text-align:center;letter-spacing:2px">🎤 이번 달 월말평가</div>';
+h+='<div style="text-align:center;font-size:12px;color:var(--tm);margin-bottom:8px">종합 '+mev.grade+' · '+mev.score+'점 · '+mev.reasons.join(' · ')+'</div>';
+var activeContracts=(S.shop||[]).filter(function(i){return i.contract&&i.contract.status==='active'});
+if(activeContracts.length>0){
+  h+='<div style="border-top:1px solid var(--border);padding-top:8px;margin-top:6px">';
+  h+='<div style="font-size:11px;color:var(--tm);margin-bottom:4px">진행 중인 계약</div>';
+  activeContracts.forEach(function(it){
+    var pg=getContractProgress(it);
+    h+='<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--tx);padding:2px 0"><span>'+'⭐'.repeat(it.tier||1)+' '+it.name+'</span><span style="color:var(--rose2);font-weight:700">'+pg.pct+'%</span></div>';
+  });
+  h+='</div>';
+}
+h+='</div>';
 // 누적 기록
 h+='<div style="margin:10px 0;padding:12px;background:var(--card);border:3px solid var(--border);border-radius:0;box-shadow:var(--shadow)">';
 h+='<div class="hand" style="font-size:18px;color:var(--gold2);margin-bottom:6px;text-align:center;letter-spacing:2px">📊 누적 기록</div>';
 h+='<div style="display:flex;justify-content:space-around;font-size:12px">';
-h+='<div style="text-align:center"><div style="color:var(--gold2);font-size:18px">'+S.gp+'</div><div style="color:var(--th);font-size:10px">총 DP</div></div>';
+h+='<div style="text-align:center"><div style="color:var(--gold2);font-size:18px">'+totalPracticeDays+'</div><div style="color:var(--th);font-size:10px">총 연습일</div></div>';
 h+='<div style="text-align:center"><div style="color:var(--gold2);font-size:18px">'+S.history.length+'</div><div style="color:var(--th);font-size:10px">총 연습</div></div>';
-h+='<div style="text-align:center"><div style="color:var(--gold2);font-size:18px">'+(S.shop.filter(function(i){return i.unlocked}).length+(S.archivedShop||[]).length)+'/'+(S.shop.length+(S.archivedShop||[]).length)+'</div><div style="color:var(--th);font-size:10px">획득</div></div>';
+h+='<div style="text-align:center"><div style="color:var(--gold2);font-size:18px">'+(S.shop.filter(function(i){return i.contract&&i.contract.status==='approved'}).length+(S.archivedShop||[]).length)+'/'+(S.shop.length+(S.archivedShop||[]).length)+'</div><div style="color:var(--th);font-size:10px">승인</div></div>';
 h+='</div></div>';
 // 몸무게 기록
 var lw=S.weights.length?S.weights[S.weights.length-1]:null;
@@ -925,7 +984,7 @@ if(calSelected&&(records[calSelected]||wtByDay[calSelected])){
 h+='<div class="cal-detail"><div class="cal-detail-title">'+(calMonth+1)+'/'+calSelected+' 기록</div>';
 if(wtByDay[calSelected])h+='<div class="cal-detail-item">⚖️ 몸무게: <b style="color:var(--gold2)">'+wtByDay[calSelected]+' kg</b></div>';
 if(records[calSelected])records[calSelected].forEach(function(item){
-h+='<div class="cal-detail-item">'+item.icon+' '+item.name+(item.gpEarned?' <span style="font-size:10px;color:var(--gold2)">+'+item.gpEarned+' DP</span>':'')+'</div>';
+h+='<div class="cal-detail-item">'+item.icon+' '+item.name+'</div>';
 });
 h+='</div>';
 } else if(calSelected){h+='<div class="cal-detail"><div class="cal-detail-item" style="color:var(--th)">기록 없음</div></div>';}
@@ -996,6 +1055,20 @@ h+='</div>';
 });
 h+='<button class="btn-gold" onclick="saveConfig()" style="margin-top:8px">💾 저장</button>';
 h+='</div></div>';
+// 난이도 가격대 설정
+var pt=S.priceTiers||[30000,100000,300000];
+h+='<div style="margin:12px 0;padding:14px;background:var(--card);border:3px solid var(--border);border-radius:0;box-shadow:var(--shadow)">';
+h+='<div class="hand" style="font-size:18px;color:var(--gold2);margin-bottom:6px;text-align:center;letter-spacing:2px">⭐ 난이도 가격대 설정</div>';
+h+='<div style="font-size:11px;color:var(--tm);text-align:center;margin-bottom:8px">가격 경계값 3개로 4단계 난이도를 나눠요</div>';
+['경계값 1','경계값 2','경계값 3'].forEach(function(lbl,i){
+  h+='<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">';
+  h+='<label style="font-size:12px;color:var(--tm);min-width:60px">'+lbl+'</label>';
+  h+='<input type="number" id="tier-'+i+'" value="'+pt[i]+'" style="flex:1;border:3px solid var(--border);border-radius:0;padding:6px;font-size:13px;background:var(--card);color:var(--tx);font-family:inherit;text-align:center">';
+  h+='<span style="font-size:11px;color:var(--th)">원</span>';
+  h+='</div>';
+});
+h+='<button class="btn-gold" onclick="saveTiers()" style="margin-top:6px">💾 저장</button>';
+h+='</div>';
 // 데이터 관리
 h+='<div style="margin:14px 0;display:flex;flex-direction:column;gap:6px">';
 h+='<button class="btn-ghost" onclick="exportBackup()">📦 데이터 백업</button>';
@@ -1081,22 +1154,26 @@ var r=curRoutine();if(r.type==='strength'){var ts=0,ds=0;r.exercises.forEach(fun
 render();
 }
 function togHow(btn){var txt=btn.nextElementSibling;if(txt.style.display==='block'){txt.style.display='none';btn.textContent='방법 보기 →';}else{txt.style.display='block';btn.textContent='접기';}}
-function addHistory(r,gpEarned){var now=new Date();S.history.push({name:r.name,icon:r.icon,year:now.getFullYear(),month:now.getMonth(),day:now.getDate(),date:(now.getMonth()+1)+'/'+now.getDate(),gpEarned:gpEarned});}
+function addHistory(r){var now=new Date();S.history.push({name:r.name,icon:r.icon,year:now.getFullYear(),month:now.getMonth(),day:now.getDate(),date:(now.getMonth()+1)+'/'+now.getDate()});}
 function pickCardio(ci){S.cardioChoice=ci;save();render();}
 function pickStrType(type){S.strChoice=type;save();render();}
 var _completeLock=false;
 function completeCrossfit(){
 if(_completeLock)return;_completeLock=true;setTimeout(function(){_completeLock=false},500);
-var r=curRoutine();S.gp+=GP_STR;
-addHistory(r,GP_STR);S.strChoice=null;save();
-showCompletePopupCustom(r.icon+' '+r.name+' (그룹 클래스)',GP_STR);
+var r=curRoutine();
+addHistory(r);S.strChoice=null;save();
+showCompletePopupCustom(r.icon+' '+r.name+' (그룹 클래스)','str');
 }
 function completeCardio(ci){
 if(_completeLock)return;_completeLock=true;setTimeout(function(){_completeLock=false},500);
-var c=getAllCardio()[ci];S.gp+=GP_STA;
-addHistory({name:c.name,icon:c.icon},GP_STA);
+var c=getAllCardio()[ci];
+addHistory({name:c.name,icon:c.icon});
 S.cardioChoice=null;save();
-showCompletePopupCustom(c.icon+' '+c.name,GP_STA);render();
+showCompletePopupCustom(c.icon+' '+c.name,'sta');render();
+}
+function saveTiers(){
+var t=[0,1,2].map(function(i){return parseInt(document.getElementById('tier-'+i).value)||0}).sort(function(a,b){return a-b});
+S.priceTiers=t;save();render();toast('⭐ 난이도 저장!');
 }
 var _nextLock=false;
 function nextRoutine(doNow){if(_nextLock)return;_nextLock=true;setTimeout(function(){_nextLock=false},500);S.idx++;S.sets={};S.cardioChoice=null;S.strChoice=null;S.extras=[];save();if(doNow)toast(curRoutine().icon+' '+curRoutine().name+' 시작!');else toast('다음에 이어할게요!');render();}
@@ -1166,22 +1243,20 @@ function goBack(){
 if(S.idx>0){S.idx--;S.sets={};S.cardioChoice=null;S.strChoice=null;
 if(S.history.length>0){var last=S.history[S.history.length-1];var now=new Date();
 if(last.year===now.getFullYear()&&last.month===now.getMonth()&&last.day===now.getDate()){
-if(last.gpEarned)S.gp-=last.gpEarned;S.history.pop();}}
+S.history.pop();}}
 save();render();toast('되돌렸어요! ↩');}
 }
 
 // === COMPLETE POPUP ===
-function showCompletePopup(routine){S.gp+=GP_STR;addHistory(routine,GP_STR);save();showCompletePopupCustom(routine.icon+' '+routine.name,GP_STR);}
-function showCompletePopupCustom(label,gpGain){
-var streak=getStreak();var pool=gpGain===GP_STR?COMMENTS_STR:COMMENTS_STA;
+function showCompletePopup(routine){addHistory(routine);save();showCompletePopupCustom(routine.icon+' '+routine.name,'str');}
+function showCompletePopupCustom(label,kind){
+var streak=getStreak();var pool=kind==='str'?COMMENTS_STR:COMMENTS_STA;
 var comment=pool[Math.floor(Math.random()*pool.length)];
 var h='<div class="complete-popup" onclick="if(event.target===this)closeCompletePopup()">';
 h+='<div class="complete-box">';
-h+='<div style="font-size:36px;margin-bottom:4px">💎</div>';
-h+='<div class="gp-gain">+'+gpGain+' DP</div>';
-h+='<div class="gp-gain-sub">'+label+' — 오늘의 연습 완료!</div>';
+h+='<div style="font-size:44px;margin-bottom:4px">✅</div>';
+h+='<div class="gp-gain-sub" style="font-size:14px;color:var(--rose2);font-weight:700">'+label+' — 오늘의 연습 완료!</div>';
 h+='<div style="margin:8px 0;display:flex;justify-content:center;gap:12px">';
-h+='<div style="text-align:center;padding:6px 12px;background:var(--sf);border-radius:4px;border:1px solid var(--border)"><div style="font-size:16px;font-weight:900;color:var(--gold2)">'+getAvailGp()+'</div><div style="font-size:9px;color:var(--th)">보유 DP</div></div>';
 h+='<div style="text-align:center;padding:6px 12px;background:var(--sf);border-radius:4px;border:1px solid var(--border)"><div style="font-size:16px;font-weight:900;color:#FF8C42">'+streak+'</div><div style="font-size:9px;color:var(--th)">🔥 연속 연습</div></div>';
 h+='</div>';
 h+='<div class="complete-comment">💬 '+comment+'</div>';
@@ -1244,8 +1319,9 @@ var dw=parseFloat(img.style.width);var dh=parseFloat(img.style.height);
 ctx.drawImage(img,-l/dw*img.naturalWidth,-t/dh*img.naturalHeight,180/dw*img.naturalWidth,180/dh*img.naturalHeight,0,0,180,180);
 var dataUrl=canvas.toDataURL('image/jpeg',0.85);
 if(mode==='addItem'&&window._tempItem){
-S.shop.push({id:Date.now(),name:window._tempItem.name,img:dataUrl,price:window._tempItem.price,gpCost:window._tempItem.gpCost,gpInvested:0,unlocked:false});
-window._tempItem=null;save();closeModal();toast('💫 위시리스트 추가!');
+var t=getTierFromPrice(window._tempItem.price);
+S.shop.push({id:Date.now(),name:window._tempItem.name,img:dataUrl,price:window._tempItem.price,tier:t,contract:makeContract(t),unlocked:false,archived:false});
+window._tempItem=null;save();closeModal();toast('📝 계약 체결!');
 if(curTab!==1){curTab=1;switchTab(1);}else render();
 } else closeModal();
 }
